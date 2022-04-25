@@ -1,4 +1,5 @@
 const { awscdk } = require('projen');
+const { NpmAccess } = require('projen/lib/javascript');
 const CDK_VERSION = '2.20.0';
 const project = new awscdk.AwsCdkConstructLibrary({
   author: 'Bharat Parmar',
@@ -19,6 +20,7 @@ const project = new awscdk.AwsCdkConstructLibrary({
   peerDeps: [
     `aws-cdk-lib@${CDK_VERSION}`,
   ],
+  npmAccess: NpmAccess.PUBLIC,
   releaseToNpm: true,
   releaseEveryCommit: true,
   licensed: true, /* Indicates if a license should be added. */

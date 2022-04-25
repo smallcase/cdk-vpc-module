@@ -3,9 +3,9 @@ cdk-vpc-module construct library is an open-source extension of the AWS Cloud De
 
 ## :sparkles: Features
 
-- :white_check_mark:  when you use default ec2.vpc module, there is no option to configure custom IPv4 CIDR(10.10.0.0/24), this module provide way to configure custom IPv4 CIDR
-- :white_check_mark: VPC Peering with  routetable entry 
-- :white_check_mark: Configurable NACL as per subnets Group
+- :white_check_mark: Option to configure custom IPv4 CIDR(10.10.0.0/24)
+- :white_check_mark: VPC Peering with  route table entry
+- :white_check_mark: Configurable NACL as per subnet group
 - :white_check_mark: NATGateway as per availabilityZones
 
 
@@ -24,8 +24,7 @@ export class VPCStack extends Stack {
         subnetConfiguration: [],
       },
       peeringConfigs: {
-        // when you deployed this stack , it will be create your vpc peering id, this key will be use to get that id and configure route-table as per route
-        "TEST-PEERING": {
+        "TEST-PEERING": { // this key will be used as your peering id, which you will have to mention below when you configure a route table for your subnets
           peeringVpcId: "vpc-0000",
           tags: {
             "Name": "TEST-PEERING to CREATED-VPC",
@@ -74,7 +73,7 @@ export class VPCStack extends Stack {
           routes: [
           ],
           tags: {
-            // you are this vpc to deploy your eks cluster, you have to tag your subnets [read more](https://aws.amazon.com/premiumsupport/knowledge-center/eks-vpc-subnet-discovery/)
+            // if you use this vpc for your eks cluster, you have to tag your subnets [read more](https://aws.amazon.com/premiumsupport/knowledge-center/eks-vpc-subnet-discovery/)
             'kubernetes.io/role/elb': '1',
             'kubernetes.io/cluster/TEST-CLUSTER': 'owned',
           },
@@ -99,6 +98,7 @@ export class VPCStack extends Stack {
           ],
           routes: [
             {
+            // if you use this vpc for your eks cluster, you have to tag your subnets [read more](https://aws.amazon.com/premiumsupport/knowledge-center/eks-vpc-subnet-discovery/)
               routerType: ec2.RouterType.VPC_PEERING_CONNECTION,
               destinationCidrBlock: "<destinationCidrBlock>",
               //<Your VPC PeeringConfig KEY, in this example TEST-PEERING will be your ID>
@@ -106,7 +106,6 @@ export class VPCStack extends Stack {
             }
           ],
           tags: {
-            // you are this vpc to deploy your eks cluster, you have to tag your subnets [read more](https://aws.amazon.com/premiumsupport/knowledge-center/eks-vpc-subnet-discovery/)
             'kubernetes.io/role/internal-elb': '1',
             'kubernetes.io/cluster/TEST-CLUSTER': 'owned',
           },
@@ -155,7 +154,7 @@ Please refer [here](/API.md) to check how to use individual resource constructs.
 
 ## :clapper: Quick Start
 
-The quick start shows you how to create **AWS-VPC** using this module.
+The quick start shows you how to create an **AWS-VPC** using this module.
 
 ### Prerequisites
 

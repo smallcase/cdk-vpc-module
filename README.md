@@ -24,7 +24,7 @@ export class VPCStack extends Stack {
         subnetConfiguration: [],
       },
       peeringConfigs: {
-        // when you deployd this stack , it will be create your peering id, this key will be use to get that id and configure route-table as per route
+        // when you deployed this stack , it will be create your vpc peering id, this key will be use to get that id and configure route-table as per route
         "TEST-PEERING": {
           peeringVpcId: "vpc-0000",
           tags: {
@@ -100,7 +100,8 @@ export class VPCStack extends Stack {
           routes: [
             {
               routerType: ec2.RouterType.VPC_PEERING_CONNECTION,
-              destinationCidrBlock: "10.1.0.0/24",
+              destinationCidrBlock: "<destinationCidrBlock>",
+              //<Your VPC PeeringConfig KEY, in this example TEST-PEERING will be your ID>
               existingVpcPeeringRouteKey: "TEST-PEERING"
             }
           ],
@@ -152,6 +153,30 @@ app.synth();
 ```
 Please refer [here](/API.md) to check how to use individual resource constructs.
 
+## :clapper: Quick Start
+
+The quick start shows you how to create **AWS-VPC** using this module.
+
+### Prerequisites
+
+- A working [`aws`](https://aws.amazon.com/cli/) CLI installation with access to an account and administrator privileges
+- You'll need a recent [NodeJS](https://nodejs.org) installation
+
+To get going you'll need a CDK project. For details please refer to the [detailed guide for CDK](https://docs.aws.amazon.com/cdk/latest/guide/hello_world.html).
+
+Create an empty directory on your system.
+
+```bash
+mkdir aws-quick-start-vpc && cd aws-quick-start-vpc
+```
+
+Bootstrap your CDK project, we will use TypeScript, but you can switch to any other supported language.
+
+```bash
+npx cdk init sample-vpc  --language typescript
+npx cdk bootstrap 
+```
+
 Install using NPM:
 ```
 npm install @smallcase/cdk-vpc-module
@@ -159,17 +184,14 @@ npm install @smallcase/cdk-vpc-module
 Using yarn
 ```
 yarn add @smallcase/cdk-vpc-module
-
-
-Bootstrap the environment
-```
-cdk bootstrap
 ```
 
 Check the changed which are to be deployed
+```bash
+~ -> npx cdk diff
 ```
-~ -> cdk diff
 
 Deploy using
+```bash
+~ -> npx cdk deploy
 ```
-~ -> cdk deploy

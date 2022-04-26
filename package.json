@@ -117,10 +117,7 @@
   "jsii": {
     "outdir": "dist",
     "targets": {
-      "python": {
-        "distName": "cdk-vpc-module",
-        "module": "cdk_vpc_module"
-      }
+      "python": {}
     },
     "tsc": {
       "outDir": "lib",

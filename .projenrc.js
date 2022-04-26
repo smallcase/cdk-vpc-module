@@ -22,6 +22,7 @@ const project = new awscdk.AwsCdkConstructLibrary({
   ],
   npmAccess: NpmAccess.PUBLIC,
   releaseToNpm: true,
+  publishToPypi: true,
   releaseEveryCommit: true,
   licensed: true, /* Indicates if a license should be added. */
   dependabot: false, /* Include dependabot configuration. */

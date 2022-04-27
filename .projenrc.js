@@ -22,6 +22,13 @@ const project = new awscdk.AwsCdkConstructLibrary({
   ],
   npmAccess: NpmAccess.PUBLIC,
   releaseToNpm: true,
+  publishToPypi: {
+    distName: 'cdk-vpc-module',
+    module: 'cdk_vpc_module',
+  },
+  publishToGo: {
+    moduleName: 'cdk-vpc-module-go',
+  },
   releaseEveryCommit: true,
   licensed: true, /* Indicates if a license should be added. */
   dependabot: false, /* Include dependabot configuration. */

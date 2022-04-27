@@ -25,7 +25,6 @@ const project = new awscdk.AwsCdkConstructLibrary({
   publishToPypi: {
     distName: 'cdk-vpc-module',
     module: 'cdk_vpc_module',
-    twineRegistryUrl: 'https://pypi.python.org/pypi',
   },
   publishToGo: {
     gitUserName: 'sc-infra-bot',

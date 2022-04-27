@@ -2,7 +2,7 @@
   "name": "@smallcase/cdk-vpc-module",
   "repository": {
     "type": "git",
-    "url": "git@github.com:smallcase/cdk-vpc-module.git"
+    "url": "https://github.com/smallcase/cdk-vpc-module.git"
   },
   "scripts": {
     "build": "npx projen build",

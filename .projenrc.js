@@ -27,7 +27,7 @@ const project = new awscdk.AwsCdkConstructLibrary({
     module: 'cdk_vpc_module',
   },
   publishToGo: {
-    moduleName: 'cdk-vpc-module',
+    moduleName: 'cdk-vpc-module-go',
   },
   releaseEveryCommit: true,
   licensed: true, /* Indicates if a license should be added. */

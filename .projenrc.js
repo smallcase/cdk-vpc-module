@@ -13,7 +13,7 @@ const project = new awscdk.AwsCdkConstructLibrary({
   release: true,
   packageName: '@smallcase/cdk-vpc-module',
   name: '@smallcase/cdk-vpc-module',
-  repositoryUrl: 'git@github.com:smallcase/cdk-vpc-module.git',
+  repositoryUrl: 'https://github.com/smallcase/cdk-vpc-module.git',
   devDeps: [
     `aws-cdk-lib@${CDK_VERSION}`,
   ],

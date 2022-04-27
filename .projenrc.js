@@ -26,6 +26,9 @@ const project = new awscdk.AwsCdkConstructLibrary({
     distName: 'cdk-vpc-module',
     module: 'cdk_vpc_module',
   },
+  publishToGo: {
+    moduleName: 'cdk-vpc-module',
+  },
   releaseEveryCommit: true,
   licensed: true, /* Indicates if a license should be added. */
   dependabot: false, /* Include dependabot configuration. */

@@ -123,7 +123,7 @@
         "module": "cdk_vpc_module"
       },
       "go": {
-        "moduleName": "cdk-vpc-module-go"
+        "moduleName": "github.com/smallcase/cdk-vpc-module-go"
       }
     },
     "tsc": {

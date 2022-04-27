@@ -27,7 +27,9 @@ const project = new awscdk.AwsCdkConstructLibrary({
     module: 'cdk_vpc_module',
   },
   publishToGo: {
-    moduleName: 'cdk-vpc-module-go',
+    gitUserName: 'sc-infra-bot',
+    gitUserEmail: 'infra@smallcase.com',
+    moduleName: 'github.com/smallcase/cdk-vpc-module-go',
   },
   releaseEveryCommit: true,
   licensed: true, /* Indicates if a license should be added. */

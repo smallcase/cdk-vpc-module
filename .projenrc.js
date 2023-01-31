@@ -15,8 +15,7 @@ const project = new AwsCdkConstructLibrary({
   name: '@smallcase/cdk-vpc-module',
   repositoryUrl: 'https://github.com/smallcase/cdk-vpc-module.git',
   devDeps: [
-    `aws-cdk-lib@${CDK_VERSION}`,
-    "ts-node@^10"
+    `aws-cdk-lib@${CDK_VERSION}`
   ],
   peerDeps: [
     `aws-cdk-lib@${CDK_VERSION}`,

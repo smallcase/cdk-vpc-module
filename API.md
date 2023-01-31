@@ -255,7 +255,8 @@ public readonly enablesInternetConnectivity: boolean;
 
 Whether this route will enable internet connectivity.
 
-If true, this route will be added before any AWS resources that depend on internet connectivity in the VPC will be created.
+If true, this route will be added before any AWS resources that depend
+on internet connectivity in the VPC will be created.
 
 ---
 

@@ -1,13 +1,13 @@
-const { awscdk } = require('projen');
+const { AwsCdkConstructLibrary } = require('projen/lib/awscdk');
 const { NpmAccess } = require('projen/lib/javascript');
-const CDK_VERSION = '2.20.0';
-const project = new awscdk.AwsCdkConstructLibrary({
+const CDK_VERSION = '2.62.1';
+const project = new AwsCdkConstructLibrary({
   author: 'Bharat Parmar',
   authorAddress: 'bharat.parmar@smallcase.com',
   cdkVersion: `${CDK_VERSION}`,
   cdkVersionPinning: true,
   constructsVersion: '10.0.5',
-  constructsVersionPinning: true,
+  constructsVersionPinning: false,
   releaseWorkflow: true,
   defaultReleaseBranch: 'main',
   release: true,

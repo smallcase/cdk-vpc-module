@@ -137,14 +137,19 @@ export class Network extends Construct {
           'natEipAllocationIds and natSubnets length should be  equal',
         );
       }
-      this.natProvider = ec2.NatProvider.gateway({
-        eipAllocationIds: props.natEipAllocationIds,
-      });
+
+      if (props.natEipAllocationIds?.length == this.natSubnets?.length) {
+        this.natProvider = ec2.NatProvider.gateway({
+          eipAllocationIds: props.natEipAllocationIds,
+        });
+      } else {
+        this.natProvider = ec2.NatProvider.gateway();
+      }
+
       this.natProvider.configureNat({
         vpc: this.vpc,
         natSubnets: this.natSubnets,
         privateSubnets: this.pvSubnets,
-
       });
     }
   }

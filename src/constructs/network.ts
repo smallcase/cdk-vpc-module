@@ -60,6 +60,7 @@ export interface ISubnetsProps {
 export interface VPCProps {
   readonly vpc: ec2.VpcProps;
   readonly peeringConfigs?: Record<string, PeeringConfig>;
+  readonly natEipAllocationIds?: string[];
   readonly subnets: ISubnetsProps[];
 }
 
@@ -85,7 +86,7 @@ export class Network extends Construct {
     this.vpc = new ec2.Vpc(this, 'VPC', props.vpc);
     if (props.peeringConfigs) {
       const convertPeeringConfig: Map<string, PeeringConfig> = ObjToStrMap(props.peeringConfigs);
-      convertPeeringConfig.forEach((createVpcPeering, key)=>{
+      convertPeeringConfig.forEach((createVpcPeering, key) => {
         let peeringConnectionIdByKey: ec2.CfnVPCPeeringConnection = new ec2.CfnVPCPeeringConnection(this, `PeerDestination-${key}`, {
           vpcId: this.vpc.vpcId,
           peerVpcId: createVpcPeering.peeringVpcId,
@@ -130,16 +131,25 @@ export class Network extends Construct {
       pb.addDefaultInternetRoute(internetGateway.ref, att);
     });
     if (this.natSubnets.length > 0) {
-      this.natProvider = ec2.NatProvider.gateway();
+      if (props.natEipAllocationIds?.length != 0 && this.natSubnets.length != props.natEipAllocationIds?.length) {
+        // eslint-disable-next-line max-len
+        throw new Error(
+          'natEipAllocationIds and natSubnets length should be  equal',
+        );
+      }
+      this.natProvider = ec2.NatProvider.gateway({
+        eipAllocationIds: props.natEipAllocationIds,
+      });
       this.natProvider.configureNat({
         vpc: this.vpc,
         natSubnets: this.natSubnets,
         privateSubnets: this.pvSubnets,
+
       });
     }
   }
 
-  createSubnet(option: ISubnetsProps, vpc: ec2.Vpc, peeringConnectionId?: PeeringConnectionInternalType ) {
+  createSubnet(option: ISubnetsProps, vpc: ec2.Vpc, peeringConnectionId?: PeeringConnectionInternalType) {
     const subnets: ec2.Subnet[] = [];
     const SUBNETTYPE_TAG = 'aws-cdk:subnet-type';
     const SUBNETNAME_TAG = 'aws-cdk:subnet-name';
@@ -162,6 +172,7 @@ export class Network extends Construct {
               cidrBlock: option.cidrBlock[index],
               vpcId: vpc.vpcId,
               mapPublicIpOnLaunch: true,
+
             },
           )
           : new ec2.PrivateSubnet(
@@ -175,7 +186,7 @@ export class Network extends Construct {
             },
           );
       option.routes?.forEach((route, routeIndex) => {
-        if (peeringConnectionId != undefined && route.existingVpcPeeringRouteKey != undefined ) {
+        if (peeringConnectionId != undefined && route.existingVpcPeeringRouteKey != undefined) {
           console.log(`peeringConnectionid ${peeringConnectionId}`);
           console.log(`existingVpcPeeringRouteKey ${route.existingVpcPeeringRouteKey}`);
           console.log(`object ${Object.keys(peeringConnectionId)}`);

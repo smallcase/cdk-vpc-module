@@ -418,6 +418,7 @@ const vPCProps: VPCProps = { ... }
 | --- | --- | --- |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.subnets">subnets</a></code> | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps">ISubnetsProps</a>[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.vpc">vpc</a></code> | <code>aws-cdk-lib.aws_ec2.VpcProps</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.natEipAllocationIds">natEipAllocationIds</a></code> | <code>string[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.peeringConfigs">peeringConfigs</a></code> | <code>{[ key: string ]: <a href="#@smallcase/cdk-vpc-module.PeeringConfig">PeeringConfig</a>}</code> | *No description.* |
 
 ---
@@ -439,6 +440,16 @@ public readonly vpc: VpcProps;
 ```
 
 - *Type:* aws-cdk-lib.aws_ec2.VpcProps
+
+---
+
+##### `natEipAllocationIds`<sup>Optional</sup> <a name="natEipAllocationIds" id="@smallcase/cdk-vpc-module.VPCProps.property.natEipAllocationIds"></a>
+
+```typescript
+public readonly natEipAllocationIds: string[];
+```
+
+- *Type:* string[]
 
 ---
 

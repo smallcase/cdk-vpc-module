@@ -131,7 +131,7 @@ export class Network extends Construct {
       pb.addDefaultInternetRoute(internetGateway.ref, att);
     });
     if (this.natSubnets.length > 0) {
-      if (props.natEipAllocationIds?.length != 0 && this.natSubnets.length != props.natEipAllocationIds?.length) {
+      if (props.natEipAllocationIds && this.natSubnets.length != props.natEipAllocationIds?.length) {
         // eslint-disable-next-line max-len
         throw new Error(
           'natEipAllocationIds and natSubnets length should be  equal',

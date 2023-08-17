@@ -483,6 +483,7 @@ public readonly peeringConfigs: {[ key: string ]: PeeringConfig};
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.ingressNetworkACL">ingressNetworkACL</a></code> | <code><a href="#@smallcase/cdk-vpc-module.NetworkACL">NetworkACL</a>[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.routes">routes</a></code> | <code><a href="#@smallcase/cdk-vpc-module.AddRouteOptions">AddRouteOptions</a>[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.tags">tags</a></code> | <code>{[ key: string ]: string}</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.useSubnetForNAT">useSubnetForNAT</a></code> | <code>boolean</code> | *No description.* |
 
 ---
 
@@ -563,6 +564,16 @@ public readonly tags: {[ key: string ]: string};
 ```
 
 - *Type:* {[ key: string ]: string}
+
+---
+
+##### `useSubnetForNAT`<sup>Optional</sup> <a name="useSubnetForNAT" id="@smallcase/cdk-vpc-module.ISubnetsProps.property.useSubnetForNAT"></a>
+
+```typescript
+public readonly useSubnetForNAT: boolean;
+```
+
+- *Type:* boolean
 
 ---
 

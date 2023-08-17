@@ -56,6 +56,7 @@ export interface ISubnetsProps {
   readonly egressNetworkACL?: NetworkACL[];
   readonly routes?: AddRouteOptions[];
   readonly tags?: Record<string, string>;
+  readonly useSubnetForNAT?: boolean;
 }
 export interface VPCProps {
   readonly vpc: ec2.VpcProps;
@@ -113,6 +114,11 @@ export class Network extends Construct {
         if (
           subnetProps.subnetGroupName == 'NATGateway' &&
           sb instanceof ec2.PublicSubnet
+        ) {
+          this.natSubnets.push(sb);
+        } else if (
+          sb instanceof ec2.PublicSubnet &&
+          subnetProps.useSubnetForNAT == true
         ) {
           this.natSubnets.push(sb);
         }

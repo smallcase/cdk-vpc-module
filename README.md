@@ -17,6 +17,16 @@ import { Construct } from "constructs";
 
 export class VPCStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
+    const s3EndpointIamPermission = new iam.PolicyStatement({
+      actions: ["s3:*"],
+      resources: ['arn:aws:s3:::*'],
+      principals: [new iam.AnyPrincipal()],
+    })
+    const monitoringEndpointIamPermission = new iam.PolicyStatement({
+      actions: ["*"],
+      resources: ['*'],
+      principals: [new iam.AnyPrincipal()],
+    })
     super(scope, id, props);
     new Network(this, 'NETWORK', {
       vpc: {
@@ -133,6 +143,39 @@ export class VPCStack extends Stack {
           },
         },
       ],
+      vpcEndpoints: [
+        {
+          name: "s3-gw",
+          service: ec2.GatewayVpcEndpointAwsService.S3,
+          subnetGroupNames: ["Private","Database"],
+          externalSubnets: [
+            {
+              id: "subnet-<id>",
+              availabilityZone: "ap-south-1a",
+              routeTableId: "rtb-<id>"
+            },
+            {
+              id: "subnet-<id>",
+              availabilityZone: "ap-south-1b",
+              routeTableId: "rtb-<id>"
+            }
+          ],
+          iamPolicyStatements: [s3EndpointIamPermission]
+        },
+        {
+          name: "da-stag-monitoring-vpe",
+          service: ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_MONITORING,
+          subnetGroupNames: ["ManageServicePrivate"],
+          iamPolicyStatements: [monitoringEndpointIamPermission],
+          securityGroupRules: [
+            {
+              peer: ec2.Peer.ipv4("10.10.0.0/16"),
+              port:  ec2.Port.tcp(443),
+              description: "From Test VPC"
+            }
+          ],
+        },
+      ]
     });
   }
 }
@@ -194,3 +237,60 @@ Deploy using
 ```bash
 ~ -> npx cdk deploy
 ```
+
+
+Features
+Multiple VPC Endpoints: Define and manage multiple VPC Endpoints in one configuration.
+Flexible Subnet Selection: Attach VPC Endpoints to multiple subnet groups or external subnets.
+Custom Security Groups: Configure security groups for Interface VPC Endpoints.
+IAM Policies: Attach custom IAM policies to control access to the VPC Endpoints.
+Tagging: Apply custom tags to each VPC Endpoint.
+
+Defining VPC Endpoints Configuration
+You can define multiple VPC Endpoints in the vpcEndpoints: [] configuration array. Each VPC Endpoint can be customized with different subnet groups, IAM policies, security group rules, and tags.
+```
+vpcEndpoints: [
+  {
+    name: "test-s3-gw",
+    service: ec2.GatewayVpcEndpointAwsService.S3,
+    subnetGroupNames: ["ManageServicePrivate", "ToolPrivate", "Database"],  // Subnet groups for the endpoint
+    externalSubnets: [
+      {
+        id: "subnet-<id>",
+        availabilityZone: "ap-south-1a",
+        routeTableId: "rtb-<id>",
+      },
+      {
+        id: "subnet-<id>",
+        availabilityZone: "ap-south-1b",
+        routeTableId: "rtb-<id>",
+      }
+    ],
+    iamPolicyStatements: [s3EndpointIamPermission],  // Custom IAM policy for the endpoint
+  },
+  {
+    name: "DynamoDbGatewayEndpoint",
+    service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
+    subnetGroupNames: ["private-subnet"],
+    additionalTags: {
+      Environment: "Staging",
+    },
+  },
+],
+```
+In this example:
+
+The S3 Gateway Endpoint is created in three subnet groups: ManageServicePrivate, ToolPrivate, and Database.
+External subnets are specified with their IDs, availability zones, and route table IDs for the S3 endpoint.
+A custom IAM policy (s3EndpointIamPermission) is attached to control access to the S3 endpoint.
+A DynamoDB Gateway Endpoint is created in the private-subnet with additional tags specifying the environment and ownership.
+
+Configuration Options
+Here’s a breakdown of the configuration options available:
+
+1 name: A unique name for the VPC Endpoint.
+2 service: The AWS service the VPC Endpoint connects to (e.g., S3, DynamoDB, Secrets Manager).
+3 subnetGroupNames: The subnet group names where the VPC Endpoint will be deployed.
+4 externalSubnets: Specify external subnets if you need to define subnets manually (each with an id, availabilityZone, and routeTableId).
+5 iamPolicyStatements: (Optional) Attach IAM policy statements to control access to the endpoint.
+6 additionalTags: (Optional) Add custom tags to the VPC Endpoint for easier identification and tracking.

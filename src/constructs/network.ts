@@ -1,4 +1,5 @@
-import { aws_ec2 as ec2, CfnOutput, Tags } from 'aws-cdk-lib';
+import { aws_ec2 as ec2, CfnOutput, Tags, aws_iam as iam, Stack } from 'aws-cdk-lib';
+import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import { ObjToStrMap } from '../utils/common';
 export interface NetworkACL {
@@ -61,6 +62,7 @@ export interface ISubnetsProps {
 export interface VPCProps {
   readonly vpc: ec2.VpcProps;
   readonly peeringConfigs?: Record<string, PeeringConfig>;
+  readonly vpcEndpoints?: VpcEndpointConfig[]; // List of VPC endpoints to configure
   readonly natEipAllocationIds?: string[];
   readonly subnets: ISubnetsProps[];
 }
@@ -75,12 +77,35 @@ export interface PeeringConfig {
 export interface PeeringConnectionInternalType {
   [name: string]: ec2.CfnVPCPeeringConnection;
 }
+export interface SecurityGroupRule {
+  readonly peer: ec2.IPeer | ec2.ISecurityGroup; // Define the source of the traffic (Peer)
+  readonly port: ec2.Port; // Define the port and protocol (Port)
+  readonly description?: string; // Optional description for the rule
+}
+export interface IExternalVPEndpointSubnets {
+  readonly id: string;
+  readonly availabilityZone: string;
+  readonly routeTableId: string;
+}
+export interface VpcEndpointConfig {
+  readonly name: string; // Name of the VPC endpoint
+  readonly service: ec2.InterfaceVpcEndpointAwsService | ec2.GatewayVpcEndpointAwsService | ec2.InterfaceVpcEndpointService;
+  readonly subnetGroupNames: string[]; // Array of subnet group names to associate with the endpoint
+  readonly externalSubnets?: IExternalVPEndpointSubnets[]; // Array of subnet IDs with availability zones
+  readonly iamPolicyStatements?: iam.PolicyStatement[]; // Optional IAM policy statements for the endpoint
+  readonly securityGroupRules?: SecurityGroupRule[]; // Optional list of security group rules for Interface Endpoints
+  readonly additionalTags?: { [key: string]: string }; // Optional additional tags
+}
+
 export class Network extends Construct {
   public pbSubnets: ec2.PublicSubnet[] = [];
   public pvSubnets: ec2.PrivateSubnet[] = [];
   public natSubnets: ec2.PublicSubnet[] = [];
-  private peeringConnectionIds: PeeringConnectionInternalType = {};
+  public subnets: { [key: string]: ec2.Subnet[] } = {};
   public readonly vpc!: ec2.Vpc;
+  public readonly securityGroupOutputs: { [key: string]: ec2.SecurityGroup } = {}; // Store Security Group outputs
+  public readonly endpointOutputs: { [key: string]: ec2.InterfaceVpcEndpoint | ec2.GatewayVpcEndpoint } = {}; // Store Endpoint outputs
+  private peeringConnectionIds: PeeringConnectionInternalType = {};
   public readonly natProvider!: ec2.NatProvider;
   constructor(scope: Construct, id: string, props: VPCProps) {
     super(scope, id);
@@ -99,12 +124,12 @@ export class Network extends Construct {
         tags.forEach((v, k) => {
           Tags.of(peeringConnectionIdByKey).add(k, v);
         });
-        console.log(`test value ${peeringConnectionIdByKey}`);
         this.peeringConnectionIds[key] = peeringConnectionIdByKey;
       });
     }
     props.subnets.forEach((subnetProps) => {
       let subnet = this.createSubnet(subnetProps, this.vpc, this.peeringConnectionIds);
+      this.subnets[subnetProps.subnetGroupName] = subnet;
       subnet.forEach((sb) => {
         if (sb instanceof ec2.PublicSubnet) {
           this.pbSubnets.push(sb);
@@ -158,6 +183,13 @@ export class Network extends Construct {
         privateSubnets: this.pvSubnets,
       });
     }
+    new CfnOutput(this, 'VpcId', { value: this.vpc.vpcId });
+    // Add VPC endpoints if specified in the props
+    if (props?.vpcEndpoints) {
+      for (const endpointConfig of props.vpcEndpoints) {
+        this.addVpcEndpoint(endpointConfig);
+      }
+    }
   }
 
   createSubnet(option: ISubnetsProps, vpc: ec2.Vpc, peeringConnectionId?: PeeringConnectionInternalType) {
@@ -198,12 +230,7 @@ export class Network extends Construct {
           );
       option.routes?.forEach((route, routeIndex) => {
         if (peeringConnectionId != undefined && route.existingVpcPeeringRouteKey != undefined) {
-          console.log(`peeringConnectionid ${peeringConnectionId}`);
-          console.log(`existingVpcPeeringRouteKey ${route.existingVpcPeeringRouteKey}`);
-          console.log(`object ${Object.keys(peeringConnectionId)}`);
-          console.log(`object get value ${peeringConnectionId[route.existingVpcPeeringRouteKey]}`);
           let routeId: ec2.CfnVPCPeeringConnection | undefined = peeringConnectionId[route.existingVpcPeeringRouteKey];
-          console.log(routeId);
           if (routeId != undefined) {
             subnet.addRoute(
               `${option.subnetGroupName}${routeIndex}RouteEntry`,
@@ -284,5 +311,148 @@ export class Network extends Construct {
     });
     return subnets;
   }
+
+  // Helper function to add VPC endpoints based on the service and optional subnet and security group configuration
+  private addVpcEndpoint(endpointConfig: VpcEndpointConfig) {
+    const NAME_TAG = 'Name';
+    // Retrieve the subnets using the group names and merge all the selected subnets
+    const mergedSubnets = this.mergeSubnetsByGroupNames(endpointConfig.name, endpointConfig.service, endpointConfig.subnetGroupNames,
+      endpointConfig.externalSubnets);
+    if (endpointConfig.service instanceof ec2.GatewayVpcEndpointAwsService) {
+      // Gateway Endpoint (e.g., S3, DynamoDB)
+      const gatewayEndpoint = this.vpc.addGatewayEndpoint(endpointConfig.name, {
+        service: endpointConfig.service,
+        subnets: [mergedSubnets],
+      });
+      // Store the Gateway Endpoint output
+      this.endpointOutputs[endpointConfig.name] = gatewayEndpoint;
+      // Tag the Interface Endpoint with a Name
+      //Tags.of(gatewayEndpoint).add(NAME_TAG, endpointConfig.name);
+      this.applyTagsUsingCustomResource(gatewayEndpoint.vpcEndpointId, `GVPETagging${endpointConfig.name}`, {
+        [NAME_TAG]: endpointConfig.name,
+        ...endpointConfig.additionalTags,
+      });
+
+      // If IAM policy statements are provided, apply them to the endpoint
+      if (endpointConfig.iamPolicyStatements) {
+        for (const statement of endpointConfig.iamPolicyStatements) {
+          gatewayEndpoint.addToPolicy(statement);
+        }
+      }
+    } else if (endpointConfig.service instanceof ec2.InterfaceVpcEndpointService ||
+      endpointConfig.service instanceof ec2.InterfaceVpcEndpointAwsService) {
+      // Interface Endpoint (e.g., MongoDB Atlas, EC2, Secrets Manager)
+
+      // If security group rules are provided, create a security group with those rules
+      const securityGroup = this.createSecurityGroupWithRules(endpointConfig.securityGroupRules, endpointConfig.name);
+
+      // Create the Interface VPC Endpoint for both custom and AWS services
+      const interfaceEndpoint = this.vpc.addInterfaceEndpoint(endpointConfig.name, {
+        service: endpointConfig.service,
+        subnets: mergedSubnets,
+        securityGroups: [securityGroup],
+      });
+
+      // Tag the Interface Endpoint with a Name
+      //Tags.of(interfaceEndpoint).add(NAME_TAG, endpointConfig.name);
+      this.applyTagsUsingCustomResource(interfaceEndpoint.vpcEndpointId, `VPETagging${endpointConfig.name}`, {
+        [NAME_TAG]: endpointConfig.name,
+        ...endpointConfig.additionalTags,
+      });
+      // Store the outputs
+      this.securityGroupOutputs[endpointConfig.name] = securityGroup;
+      this.endpointOutputs[endpointConfig.name] = interfaceEndpoint;
+    } else {
+      throw new Error('Unsupported service type');
+    }
+  }
+
+
+  // Helper function to merge subnets based on subnet group names
+  private mergeSubnetsByGroupNames(name: string,
+    service: ec2.InterfaceVpcEndpointAwsService | ec2.GatewayVpcEndpointAwsService
+    | ec2.InterfaceVpcEndpointService,
+    subnetGroupNames: string[], externalSubnets?: IExternalVPEndpointSubnets[] ): ec2.SelectedSubnets {
+    // Check if subnetGroupNames is required and not empty for Interface VPC Endpoints
+    if ((service instanceof ec2.InterfaceVpcEndpointAwsService || service instanceof ec2.InterfaceVpcEndpointService) &&
+      (!subnetGroupNames || subnetGroupNames.length === 0)) {
+      throw new Error('subnetGroupNames must contain at least one subnet group name for Interface VPC Endpoints.');
+    }
+
+    // Initialize an array to hold all the subnets
+    let mergedSubnets: ec2.ISubnet[] = [];
+
+    // Iterate over each subnet group name and select the subnets
+    for (const groupName of subnetGroupNames) {
+      const selectedSubnets = this.subnets[groupName];
+      mergedSubnets = mergedSubnets.concat(selectedSubnets); // Merge the subnets
+    }
+    // Fetch subnets by subnet ID and add to the mergedSubnets array
+    if (externalSubnets != undefined && !(service instanceof ec2.InterfaceVpcEndpointAwsService
+      || service instanceof ec2.InterfaceVpcEndpointService)) {
+      for (const subnetInfo of externalSubnets) {
+        const subnet = ec2.Subnet.fromSubnetAttributes(this, `${name}-${subnetInfo.id}`, {
+          subnetId: subnetInfo.id,
+          availabilityZone: subnetInfo.availabilityZone, // Must supply the availability zone
+          routeTableId: subnetInfo.routeTableId,
+        });
+        mergedSubnets.push(subnet);
+      }
+    }
+
+    // Return the merged subnets as a SelectedSubnets object
+    return {
+      subnets: mergedSubnets,
+      availabilityZones: [...new Set(mergedSubnets.map(subnet => subnet.availabilityZone))], // Deduplicate AZs
+    } as ec2.SelectedSubnets;
+  }
+
+  // Helper function to create a security group with a list of rules
+  private createSecurityGroupWithRules(rules?: SecurityGroupRule[], name?: string): ec2.SecurityGroup {
+    const sg = new ec2.SecurityGroup(this, `${name}-sg`, {
+      vpc: this.vpc,
+      securityGroupName: `${name}`,
+      description: `Custom security group for ${name}`,
+      allowAllOutbound: true, // Allow all outbound traffic by default
+    });
+    Tags.of(sg).add('Name', `${name}`);
+    // If rules are provided, add each rule to the security group
+    if (rules) {
+      for (const rule of rules) {
+        sg.addIngressRule(rule.peer, rule.port, rule.description);
+      }
+    }
+
+    return sg;
+  }
+  private applyTagsUsingCustomResource(resourceId: string, resourceType: string, tags: { [key: string]: string }) {
+    new AwsCustomResource(this, `AddTagsTo${resourceType}`, {
+      onCreate: {
+        service: 'EC2',
+        action: 'createTags',
+        parameters: {
+          Resources: [resourceId], // Use the VPC endpoint ID (or other resource IDs) for tagging
+          Tags: Object.entries(tags).map(([key, value]) => ({ Key: key, Value: value })),
+        },
+        physicalResourceId: PhysicalResourceId.of(`${resourceType}-tags`), // Ensures the resource is tagged only once
+      },
+      // onUpdate: {
+      //   service: 'EC2',
+      //   action: 'createTags',
+      //   parameters: {
+      //     Resources: [resourceId], // Use the VPC endpoint ID (or other resource IDs) for tagging
+      //     Tags: Object.entries(tags).map(([key, value]) => ({ Key: key, Value: value })),
+      //   },
+      //   physicalResourceId: PhysicalResourceId.of(`${resourceType}-${Object.keys(tags).length}-tags-update`), // Ensures the resource is tagged only once
+      // },
+      policy: AwsCustomResourcePolicy.fromStatements([
+        new iam.PolicyStatement({
+          actions: ['ec2:CreateTags'],
+          resources: [`arn:aws:ec2:${Stack.of(this).region}:${Stack.of(this).account}:vpc-endpoint/${resourceId}`],
+        }),
+      ]),
+    });
+  }
 }
+
 

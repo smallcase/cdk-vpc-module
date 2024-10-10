@@ -287,10 +287,9 @@ A DynamoDB Gateway Endpoint is created in the private-subnet with additional tag
 
 Configuration Options
 Here’s a breakdown of the configuration options available:
-
-1 name: A unique name for the VPC Endpoint.
-2 service: The AWS service the VPC Endpoint connects to (e.g., S3, DynamoDB, Secrets Manager).
-3 subnetGroupNames: The subnet group names where the VPC Endpoint will be deployed.
-4 externalSubnets: Specify external subnets if you need to define subnets manually (each with an id, availabilityZone, and routeTableId).
-5 iamPolicyStatements: (Optional) Attach IAM policy statements to control access to the endpoint.
-6 additionalTags: (Optional) Add custom tags to the VPC Endpoint for easier identification and tracking.
+1. name: A unique name for the VPC Endpoint.
+2. service: The AWS service the VPC Endpoint connects to (e.g., S3, DynamoDB, Secrets Manager)
+3. subnetGroupNames: The subnet group names where the VPC Endpoint will be deployed.
+4. externalSubnets: Specify external subnets if you need to define subnets manually (each with an id, availabilityZone, and routeTableId).
+5. iamPolicyStatements: (Optional) Attach IAM policy statements to control access to the endpoint.
+6. additionalTags: (Optional) Add custom tags to the VPC Endpoint for easier identification and tracking.

@@ -110,11 +110,14 @@ Any object.
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.node">node</a></code> | <code>constructs.Node</code> | The tree node. |
+| <code><a href="#@smallcase/cdk-vpc-module.Network.property.endpointOutputs">endpointOutputs</a></code> | <code>{[ key: string ]: aws-cdk-lib.aws_ec2.GatewayVpcEndpoint \| aws-cdk-lib.aws_ec2.InterfaceVpcEndpoint}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.natProvider">natProvider</a></code> | <code>aws-cdk-lib.aws_ec2.NatProvider</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.Network.property.securityGroupOutputs">securityGroupOutputs</a></code> | <code>{[ key: string ]: aws-cdk-lib.aws_ec2.SecurityGroup}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.vpc">vpc</a></code> | <code>aws-cdk-lib.aws_ec2.Vpc</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.natSubnets">natSubnets</a></code> | <code>aws-cdk-lib.aws_ec2.PublicSubnet[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.pbSubnets">pbSubnets</a></code> | <code>aws-cdk-lib.aws_ec2.PublicSubnet[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.pvSubnets">pvSubnets</a></code> | <code>aws-cdk-lib.aws_ec2.PrivateSubnet[]</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.Network.property.subnets">subnets</a></code> | <code>{[ key: string ]: aws-cdk-lib.aws_ec2.Subnet[]}</code> | *No description.* |
 
 ---
 
@@ -130,6 +133,16 @@ The tree node.
 
 ---
 
+##### `endpointOutputs`<sup>Required</sup> <a name="endpointOutputs" id="@smallcase/cdk-vpc-module.Network.property.endpointOutputs"></a>
+
+```typescript
+public readonly endpointOutputs: {[ key: string ]: GatewayVpcEndpoint | InterfaceVpcEndpoint};
+```
+
+- *Type:* {[ key: string ]: aws-cdk-lib.aws_ec2.GatewayVpcEndpoint | aws-cdk-lib.aws_ec2.InterfaceVpcEndpoint}
+
+---
+
 ##### `natProvider`<sup>Required</sup> <a name="natProvider" id="@smallcase/cdk-vpc-module.Network.property.natProvider"></a>
 
 ```typescript
@@ -137,6 +150,16 @@ public readonly natProvider: NatProvider;
 ```
 
 - *Type:* aws-cdk-lib.aws_ec2.NatProvider
+
+---
+
+##### `securityGroupOutputs`<sup>Required</sup> <a name="securityGroupOutputs" id="@smallcase/cdk-vpc-module.Network.property.securityGroupOutputs"></a>
+
+```typescript
+public readonly securityGroupOutputs: {[ key: string ]: SecurityGroup};
+```
+
+- *Type:* {[ key: string ]: aws-cdk-lib.aws_ec2.SecurityGroup}
 
 ---
 
@@ -177,6 +200,16 @@ public readonly pvSubnets: PrivateSubnet[];
 ```
 
 - *Type:* aws-cdk-lib.aws_ec2.PrivateSubnet[]
+
+---
+
+##### `subnets`<sup>Required</sup> <a name="subnets" id="@smallcase/cdk-vpc-module.Network.property.subnets"></a>
+
+```typescript
+public readonly subnets: {[ key: string ]: Subnet[]};
+```
+
+- *Type:* {[ key: string ]: aws-cdk-lib.aws_ec2.Subnet[]}
 
 ---
 
@@ -402,6 +435,150 @@ const peeringConnectionInternalType: PeeringConnectionInternalType = { ... }
 ```
 
 
+### SecurityGroupRule <a name="SecurityGroupRule" id="@smallcase/cdk-vpc-module.SecurityGroupRule"></a>
+
+#### Initializer <a name="Initializer" id="@smallcase/cdk-vpc-module.SecurityGroupRule.Initializer"></a>
+
+```typescript
+import { SecurityGroupRule } from '@smallcase/cdk-vpc-module'
+
+const securityGroupRule: SecurityGroupRule = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@smallcase/cdk-vpc-module.SecurityGroupRule.property.peer">peer</a></code> | <code>aws-cdk-lib.aws_ec2.ISecurityGroup \| aws-cdk-lib.aws_ec2.IPeer</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.SecurityGroupRule.property.port">port</a></code> | <code>aws-cdk-lib.aws_ec2.Port</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.SecurityGroupRule.property.description">description</a></code> | <code>string</code> | *No description.* |
+
+---
+
+##### `peer`<sup>Required</sup> <a name="peer" id="@smallcase/cdk-vpc-module.SecurityGroupRule.property.peer"></a>
+
+```typescript
+public readonly peer: ISecurityGroup | IPeer;
+```
+
+- *Type:* aws-cdk-lib.aws_ec2.ISecurityGroup | aws-cdk-lib.aws_ec2.IPeer
+
+---
+
+##### `port`<sup>Required</sup> <a name="port" id="@smallcase/cdk-vpc-module.SecurityGroupRule.property.port"></a>
+
+```typescript
+public readonly port: Port;
+```
+
+- *Type:* aws-cdk-lib.aws_ec2.Port
+
+---
+
+##### `description`<sup>Optional</sup> <a name="description" id="@smallcase/cdk-vpc-module.SecurityGroupRule.property.description"></a>
+
+```typescript
+public readonly description: string;
+```
+
+- *Type:* string
+
+---
+
+### VpcEndpointConfig <a name="VpcEndpointConfig" id="@smallcase/cdk-vpc-module.VpcEndpointConfig"></a>
+
+#### Initializer <a name="Initializer" id="@smallcase/cdk-vpc-module.VpcEndpointConfig.Initializer"></a>
+
+```typescript
+import { VpcEndpointConfig } from '@smallcase/cdk-vpc-module'
+
+const vpcEndpointConfig: VpcEndpointConfig = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig.property.name">name</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig.property.service">service</a></code> | <code>aws-cdk-lib.aws_ec2.GatewayVpcEndpointAwsService \| aws-cdk-lib.aws_ec2.InterfaceVpcEndpointService \| aws-cdk-lib.aws_ec2.InterfaceVpcEndpointAwsService</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig.property.subnetGroupNames">subnetGroupNames</a></code> | <code>string[]</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig.property.additionalTags">additionalTags</a></code> | <code>{[ key: string ]: string}</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig.property.externalSubnets">externalSubnets</a></code> | <code><a href="#@smallcase/cdk-vpc-module.IExternalVPEndpointSubnets">IExternalVPEndpointSubnets</a>[]</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig.property.iamPolicyStatements">iamPolicyStatements</a></code> | <code>aws-cdk-lib.aws_iam.PolicyStatement[]</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig.property.securityGroupRules">securityGroupRules</a></code> | <code><a href="#@smallcase/cdk-vpc-module.SecurityGroupRule">SecurityGroupRule</a>[]</code> | *No description.* |
+
+---
+
+##### `name`<sup>Required</sup> <a name="name" id="@smallcase/cdk-vpc-module.VpcEndpointConfig.property.name"></a>
+
+```typescript
+public readonly name: string;
+```
+
+- *Type:* string
+
+---
+
+##### `service`<sup>Required</sup> <a name="service" id="@smallcase/cdk-vpc-module.VpcEndpointConfig.property.service"></a>
+
+```typescript
+public readonly service: GatewayVpcEndpointAwsService | InterfaceVpcEndpointService | InterfaceVpcEndpointAwsService;
+```
+
+- *Type:* aws-cdk-lib.aws_ec2.GatewayVpcEndpointAwsService | aws-cdk-lib.aws_ec2.InterfaceVpcEndpointService | aws-cdk-lib.aws_ec2.InterfaceVpcEndpointAwsService
+
+---
+
+##### `subnetGroupNames`<sup>Required</sup> <a name="subnetGroupNames" id="@smallcase/cdk-vpc-module.VpcEndpointConfig.property.subnetGroupNames"></a>
+
+```typescript
+public readonly subnetGroupNames: string[];
+```
+
+- *Type:* string[]
+
+---
+
+##### `additionalTags`<sup>Optional</sup> <a name="additionalTags" id="@smallcase/cdk-vpc-module.VpcEndpointConfig.property.additionalTags"></a>
+
+```typescript
+public readonly additionalTags: {[ key: string ]: string};
+```
+
+- *Type:* {[ key: string ]: string}
+
+---
+
+##### `externalSubnets`<sup>Optional</sup> <a name="externalSubnets" id="@smallcase/cdk-vpc-module.VpcEndpointConfig.property.externalSubnets"></a>
+
+```typescript
+public readonly externalSubnets: IExternalVPEndpointSubnets[];
+```
+
+- *Type:* <a href="#@smallcase/cdk-vpc-module.IExternalVPEndpointSubnets">IExternalVPEndpointSubnets</a>[]
+
+---
+
+##### `iamPolicyStatements`<sup>Optional</sup> <a name="iamPolicyStatements" id="@smallcase/cdk-vpc-module.VpcEndpointConfig.property.iamPolicyStatements"></a>
+
+```typescript
+public readonly iamPolicyStatements: PolicyStatement[];
+```
+
+- *Type:* aws-cdk-lib.aws_iam.PolicyStatement[]
+
+---
+
+##### `securityGroupRules`<sup>Optional</sup> <a name="securityGroupRules" id="@smallcase/cdk-vpc-module.VpcEndpointConfig.property.securityGroupRules"></a>
+
+```typescript
+public readonly securityGroupRules: SecurityGroupRule[];
+```
+
+- *Type:* <a href="#@smallcase/cdk-vpc-module.SecurityGroupRule">SecurityGroupRule</a>[]
+
+---
+
 ### VPCProps <a name="VPCProps" id="@smallcase/cdk-vpc-module.VPCProps"></a>
 
 #### Initializer <a name="Initializer" id="@smallcase/cdk-vpc-module.VPCProps.Initializer"></a>
@@ -420,6 +597,7 @@ const vPCProps: VPCProps = { ... }
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.vpc">vpc</a></code> | <code>aws-cdk-lib.aws_ec2.VpcProps</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.natEipAllocationIds">natEipAllocationIds</a></code> | <code>string[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.peeringConfigs">peeringConfigs</a></code> | <code>{[ key: string ]: <a href="#@smallcase/cdk-vpc-module.PeeringConfig">PeeringConfig</a>}</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.vpcEndpoints">vpcEndpoints</a></code> | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig">VpcEndpointConfig</a>[]</code> | *No description.* |
 
 ---
 
@@ -463,8 +641,63 @@ public readonly peeringConfigs: {[ key: string ]: PeeringConfig};
 
 ---
 
+##### `vpcEndpoints`<sup>Optional</sup> <a name="vpcEndpoints" id="@smallcase/cdk-vpc-module.VPCProps.property.vpcEndpoints"></a>
+
+```typescript
+public readonly vpcEndpoints: VpcEndpointConfig[];
+```
+
+- *Type:* <a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig">VpcEndpointConfig</a>[]
+
+---
+
 
 ## Protocols <a name="Protocols" id="Protocols"></a>
+
+### IExternalVPEndpointSubnets <a name="IExternalVPEndpointSubnets" id="@smallcase/cdk-vpc-module.IExternalVPEndpointSubnets"></a>
+
+- *Implemented By:* <a href="#@smallcase/cdk-vpc-module.IExternalVPEndpointSubnets">IExternalVPEndpointSubnets</a>
+
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@smallcase/cdk-vpc-module.IExternalVPEndpointSubnets.property.availabilityZone">availabilityZone</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.IExternalVPEndpointSubnets.property.id">id</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.IExternalVPEndpointSubnets.property.routeTableId">routeTableId</a></code> | <code>string</code> | *No description.* |
+
+---
+
+##### `availabilityZone`<sup>Required</sup> <a name="availabilityZone" id="@smallcase/cdk-vpc-module.IExternalVPEndpointSubnets.property.availabilityZone"></a>
+
+```typescript
+public readonly availabilityZone: string;
+```
+
+- *Type:* string
+
+---
+
+##### `id`<sup>Required</sup> <a name="id" id="@smallcase/cdk-vpc-module.IExternalVPEndpointSubnets.property.id"></a>
+
+```typescript
+public readonly id: string;
+```
+
+- *Type:* string
+
+---
+
+##### `routeTableId`<sup>Required</sup> <a name="routeTableId" id="@smallcase/cdk-vpc-module.IExternalVPEndpointSubnets.property.routeTableId"></a>
+
+```typescript
+public readonly routeTableId: string;
+```
+
+- *Type:* string
+
+---
 
 ### ISubnetsProps <a name="ISubnetsProps" id="@smallcase/cdk-vpc-module.ISubnetsProps"></a>
 

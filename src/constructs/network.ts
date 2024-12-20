@@ -74,7 +74,12 @@ export interface PeeringConfig {
   readonly peerRegion?: string;
   readonly tags: Record<string, string>;
 }
+
+
 export interface PeeringConnectionInternalType {
+/**
+* @jsii ignore
+*/
   [name: string]: ec2.CfnVPCPeeringConnection;
 }
 export interface SecurityGroupRule {

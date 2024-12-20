@@ -110,7 +110,7 @@ Any object.
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.node">node</a></code> | <code>constructs.Node</code> | The tree node. |
-| <code><a href="#@smallcase/cdk-vpc-module.Network.property.endpointOutputs">endpointOutputs</a></code> | <code>{[ key: string ]: aws-cdk-lib.aws_ec2.GatewayVpcEndpoint \| aws-cdk-lib.aws_ec2.InterfaceVpcEndpoint}</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.Network.property.endpointOutputs">endpointOutputs</a></code> | <code>{[ key: string ]: aws-cdk-lib.aws_ec2.InterfaceVpcEndpoint \| aws-cdk-lib.aws_ec2.GatewayVpcEndpoint}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.natProvider">natProvider</a></code> | <code>aws-cdk-lib.aws_ec2.NatProvider</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.securityGroupOutputs">securityGroupOutputs</a></code> | <code>{[ key: string ]: aws-cdk-lib.aws_ec2.SecurityGroup}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.vpc">vpc</a></code> | <code>aws-cdk-lib.aws_ec2.Vpc</code> | *No description.* |
@@ -136,10 +136,10 @@ The tree node.
 ##### `endpointOutputs`<sup>Required</sup> <a name="endpointOutputs" id="@smallcase/cdk-vpc-module.Network.property.endpointOutputs"></a>
 
 ```typescript
-public readonly endpointOutputs: {[ key: string ]: GatewayVpcEndpoint | InterfaceVpcEndpoint};
+public readonly endpointOutputs: {[ key: string ]: InterfaceVpcEndpoint | GatewayVpcEndpoint};
 ```
 
-- *Type:* {[ key: string ]: aws-cdk-lib.aws_ec2.GatewayVpcEndpoint | aws-cdk-lib.aws_ec2.InterfaceVpcEndpoint}
+- *Type:* {[ key: string ]: aws-cdk-lib.aws_ec2.InterfaceVpcEndpoint | aws-cdk-lib.aws_ec2.GatewayVpcEndpoint}
 
 ---
 
@@ -449,7 +449,7 @@ const securityGroupRule: SecurityGroupRule = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#@smallcase/cdk-vpc-module.SecurityGroupRule.property.peer">peer</a></code> | <code>aws-cdk-lib.aws_ec2.ISecurityGroup \| aws-cdk-lib.aws_ec2.IPeer</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.SecurityGroupRule.property.peer">peer</a></code> | <code>aws-cdk-lib.aws_ec2.IPeer \| aws-cdk-lib.aws_ec2.ISecurityGroup</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.SecurityGroupRule.property.port">port</a></code> | <code>aws-cdk-lib.aws_ec2.Port</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.SecurityGroupRule.property.description">description</a></code> | <code>string</code> | *No description.* |
 
@@ -458,10 +458,10 @@ const securityGroupRule: SecurityGroupRule = { ... }
 ##### `peer`<sup>Required</sup> <a name="peer" id="@smallcase/cdk-vpc-module.SecurityGroupRule.property.peer"></a>
 
 ```typescript
-public readonly peer: ISecurityGroup | IPeer;
+public readonly peer: IPeer | ISecurityGroup;
 ```
 
-- *Type:* aws-cdk-lib.aws_ec2.ISecurityGroup | aws-cdk-lib.aws_ec2.IPeer
+- *Type:* aws-cdk-lib.aws_ec2.IPeer | aws-cdk-lib.aws_ec2.ISecurityGroup
 
 ---
 
@@ -500,7 +500,7 @@ const vpcEndpointConfig: VpcEndpointConfig = { ... }
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig.property.name">name</a></code> | <code>string</code> | *No description.* |
-| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig.property.service">service</a></code> | <code>aws-cdk-lib.aws_ec2.GatewayVpcEndpointAwsService \| aws-cdk-lib.aws_ec2.InterfaceVpcEndpointService \| aws-cdk-lib.aws_ec2.InterfaceVpcEndpointAwsService</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig.property.service">service</a></code> | <code>aws-cdk-lib.aws_ec2.InterfaceVpcEndpointAwsService \| aws-cdk-lib.aws_ec2.GatewayVpcEndpointAwsService \| aws-cdk-lib.aws_ec2.InterfaceVpcEndpointService</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig.property.subnetGroupNames">subnetGroupNames</a></code> | <code>string[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig.property.additionalTags">additionalTags</a></code> | <code>{[ key: string ]: string}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig.property.externalSubnets">externalSubnets</a></code> | <code><a href="#@smallcase/cdk-vpc-module.IExternalVPEndpointSubnets">IExternalVPEndpointSubnets</a>[]</code> | *No description.* |
@@ -522,10 +522,10 @@ public readonly name: string;
 ##### `service`<sup>Required</sup> <a name="service" id="@smallcase/cdk-vpc-module.VpcEndpointConfig.property.service"></a>
 
 ```typescript
-public readonly service: GatewayVpcEndpointAwsService | InterfaceVpcEndpointService | InterfaceVpcEndpointAwsService;
+public readonly service: InterfaceVpcEndpointAwsService | GatewayVpcEndpointAwsService | InterfaceVpcEndpointService;
 ```
 
-- *Type:* aws-cdk-lib.aws_ec2.GatewayVpcEndpointAwsService | aws-cdk-lib.aws_ec2.InterfaceVpcEndpointService | aws-cdk-lib.aws_ec2.InterfaceVpcEndpointAwsService
+- *Type:* aws-cdk-lib.aws_ec2.InterfaceVpcEndpointAwsService | aws-cdk-lib.aws_ec2.GatewayVpcEndpointAwsService | aws-cdk-lib.aws_ec2.InterfaceVpcEndpointService
 
 ---
 

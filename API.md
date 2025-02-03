@@ -313,6 +313,100 @@ public readonly routerId: string;
 
 ---
 
+### LoadBalancerConfig <a name="LoadBalancerConfig" id="@smallcase/cdk-vpc-module.LoadBalancerConfig"></a>
+
+#### Initializer <a name="Initializer" id="@smallcase/cdk-vpc-module.LoadBalancerConfig.Initializer"></a>
+
+```typescript
+import { LoadBalancerConfig } from '@smallcase/cdk-vpc-module'
+
+const loadBalancerConfig: LoadBalancerConfig = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@smallcase/cdk-vpc-module.LoadBalancerConfig.property.certificates">certificates</a></code> | <code>string[]</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.LoadBalancerConfig.property.existingArn">existingArn</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.LoadBalancerConfig.property.existingSecurityGroupId">existingSecurityGroupId</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.LoadBalancerConfig.property.internetFacing">internetFacing</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.LoadBalancerConfig.property.securityGroupRules">securityGroupRules</a></code> | <code><a href="#@smallcase/cdk-vpc-module.SecurityGroupRule">SecurityGroupRule</a>[]</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.LoadBalancerConfig.property.subnetGroupName">subnetGroupName</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.LoadBalancerConfig.property.targetGroups">targetGroups</a></code> | <code><a href="#@smallcase/cdk-vpc-module.TargetGroupConfig">TargetGroupConfig</a>[]</code> | *No description.* |
+
+---
+
+##### `certificates`<sup>Optional</sup> <a name="certificates" id="@smallcase/cdk-vpc-module.LoadBalancerConfig.property.certificates"></a>
+
+```typescript
+public readonly certificates: string[];
+```
+
+- *Type:* string[]
+
+---
+
+##### `existingArn`<sup>Optional</sup> <a name="existingArn" id="@smallcase/cdk-vpc-module.LoadBalancerConfig.property.existingArn"></a>
+
+```typescript
+public readonly existingArn: string;
+```
+
+- *Type:* string
+
+---
+
+##### `existingSecurityGroupId`<sup>Optional</sup> <a name="existingSecurityGroupId" id="@smallcase/cdk-vpc-module.LoadBalancerConfig.property.existingSecurityGroupId"></a>
+
+```typescript
+public readonly existingSecurityGroupId: string;
+```
+
+- *Type:* string
+
+---
+
+##### `internetFacing`<sup>Optional</sup> <a name="internetFacing" id="@smallcase/cdk-vpc-module.LoadBalancerConfig.property.internetFacing"></a>
+
+```typescript
+public readonly internetFacing: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `securityGroupRules`<sup>Optional</sup> <a name="securityGroupRules" id="@smallcase/cdk-vpc-module.LoadBalancerConfig.property.securityGroupRules"></a>
+
+```typescript
+public readonly securityGroupRules: SecurityGroupRule[];
+```
+
+- *Type:* <a href="#@smallcase/cdk-vpc-module.SecurityGroupRule">SecurityGroupRule</a>[]
+
+---
+
+##### `subnetGroupName`<sup>Optional</sup> <a name="subnetGroupName" id="@smallcase/cdk-vpc-module.LoadBalancerConfig.property.subnetGroupName"></a>
+
+```typescript
+public readonly subnetGroupName: string;
+```
+
+- *Type:* string
+
+---
+
+##### `targetGroups`<sup>Optional</sup> <a name="targetGroups" id="@smallcase/cdk-vpc-module.LoadBalancerConfig.property.targetGroups"></a>
+
+```typescript
+public readonly targetGroups: TargetGroupConfig[];
+```
+
+- *Type:* <a href="#@smallcase/cdk-vpc-module.TargetGroupConfig">TargetGroupConfig</a>[]
+
+---
+
 ### NetworkACL <a name="NetworkACL" id="@smallcase/cdk-vpc-module.NetworkACL"></a>
 
 #### Initializer <a name="Initializer" id="@smallcase/cdk-vpc-module.NetworkACL.Initializer"></a>
@@ -349,6 +443,78 @@ public readonly traffic: AclTraffic;
 ```
 
 - *Type:* aws-cdk-lib.aws_ec2.AclTraffic
+
+---
+
+### NetworkLoadBalancerConfig <a name="NetworkLoadBalancerConfig" id="@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig"></a>
+
+#### Initializer <a name="Initializer" id="@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.Initializer"></a>
+
+```typescript
+import { NetworkLoadBalancerConfig } from '@smallcase/cdk-vpc-module'
+
+const networkLoadBalancerConfig: NetworkLoadBalancerConfig = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.securityGroupRules">securityGroupRules</a></code> | <code><a href="#@smallcase/cdk-vpc-module.SecurityGroupRule">SecurityGroupRule</a>[]</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.subnetGroupName">subnetGroupName</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.certificates">certificates</a></code> | <code>string[]</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.existingSecurityGroupId">existingSecurityGroupId</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.internetFacing">internetFacing</a></code> | <code>boolean</code> | *No description.* |
+
+---
+
+##### `securityGroupRules`<sup>Required</sup> <a name="securityGroupRules" id="@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.securityGroupRules"></a>
+
+```typescript
+public readonly securityGroupRules: SecurityGroupRule[];
+```
+
+- *Type:* <a href="#@smallcase/cdk-vpc-module.SecurityGroupRule">SecurityGroupRule</a>[]
+
+---
+
+##### `subnetGroupName`<sup>Required</sup> <a name="subnetGroupName" id="@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.subnetGroupName"></a>
+
+```typescript
+public readonly subnetGroupName: string;
+```
+
+- *Type:* string
+
+---
+
+##### `certificates`<sup>Optional</sup> <a name="certificates" id="@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.certificates"></a>
+
+```typescript
+public readonly certificates: string[];
+```
+
+- *Type:* string[]
+
+---
+
+##### `existingSecurityGroupId`<sup>Optional</sup> <a name="existingSecurityGroupId" id="@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.existingSecurityGroupId"></a>
+
+```typescript
+public readonly existingSecurityGroupId: string;
+```
+
+- *Type:* string
+
+---
+
+##### `internetFacing`<sup>Optional</sup> <a name="internetFacing" id="@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.internetFacing"></a>
+
+```typescript
+public readonly internetFacing: boolean;
+```
+
+- *Type:* boolean
 
 ---
 
@@ -485,6 +651,111 @@ public readonly description: string;
 
 ---
 
+### TargetGroupConfig <a name="TargetGroupConfig" id="@smallcase/cdk-vpc-module.TargetGroupConfig"></a>
+
+#### Initializer <a name="Initializer" id="@smallcase/cdk-vpc-module.TargetGroupConfig.Initializer"></a>
+
+```typescript
+import { TargetGroupConfig } from '@smallcase/cdk-vpc-module'
+
+const targetGroupConfig: TargetGroupConfig = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@smallcase/cdk-vpc-module.TargetGroupConfig.property.applicationPort">applicationPort</a></code> | <code>number</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.TargetGroupConfig.property.host">host</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.TargetGroupConfig.property.healthCheckPath">healthCheckPath</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.TargetGroupConfig.property.healthCheckPort">healthCheckPort</a></code> | <code>number</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.TargetGroupConfig.property.healthCheckProtocol">healthCheckProtocol</a></code> | <code>aws-cdk-lib.aws_elasticloadbalancingv2.Protocol</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.TargetGroupConfig.property.priority">priority</a></code> | <code>number</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.TargetGroupConfig.property.protocol">protocol</a></code> | <code>aws-cdk-lib.aws_elasticloadbalancingv2.ApplicationProtocol</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.TargetGroupConfig.property.protocolVersion">protocolVersion</a></code> | <code>aws-cdk-lib.aws_elasticloadbalancingv2.ApplicationProtocolVersion</code> | *No description.* |
+
+---
+
+##### `applicationPort`<sup>Required</sup> <a name="applicationPort" id="@smallcase/cdk-vpc-module.TargetGroupConfig.property.applicationPort"></a>
+
+```typescript
+public readonly applicationPort: number;
+```
+
+- *Type:* number
+
+---
+
+##### `host`<sup>Required</sup> <a name="host" id="@smallcase/cdk-vpc-module.TargetGroupConfig.property.host"></a>
+
+```typescript
+public readonly host: string;
+```
+
+- *Type:* string
+
+---
+
+##### `healthCheckPath`<sup>Optional</sup> <a name="healthCheckPath" id="@smallcase/cdk-vpc-module.TargetGroupConfig.property.healthCheckPath"></a>
+
+```typescript
+public readonly healthCheckPath: string;
+```
+
+- *Type:* string
+
+---
+
+##### `healthCheckPort`<sup>Optional</sup> <a name="healthCheckPort" id="@smallcase/cdk-vpc-module.TargetGroupConfig.property.healthCheckPort"></a>
+
+```typescript
+public readonly healthCheckPort: number;
+```
+
+- *Type:* number
+
+---
+
+##### `healthCheckProtocol`<sup>Optional</sup> <a name="healthCheckProtocol" id="@smallcase/cdk-vpc-module.TargetGroupConfig.property.healthCheckProtocol"></a>
+
+```typescript
+public readonly healthCheckProtocol: Protocol;
+```
+
+- *Type:* aws-cdk-lib.aws_elasticloadbalancingv2.Protocol
+
+---
+
+##### `priority`<sup>Optional</sup> <a name="priority" id="@smallcase/cdk-vpc-module.TargetGroupConfig.property.priority"></a>
+
+```typescript
+public readonly priority: number;
+```
+
+- *Type:* number
+
+---
+
+##### `protocol`<sup>Optional</sup> <a name="protocol" id="@smallcase/cdk-vpc-module.TargetGroupConfig.property.protocol"></a>
+
+```typescript
+public readonly protocol: ApplicationProtocol;
+```
+
+- *Type:* aws-cdk-lib.aws_elasticloadbalancingv2.ApplicationProtocol
+
+---
+
+##### `protocolVersion`<sup>Optional</sup> <a name="protocolVersion" id="@smallcase/cdk-vpc-module.TargetGroupConfig.property.protocolVersion"></a>
+
+```typescript
+public readonly protocolVersion: ApplicationProtocolVersion;
+```
+
+- *Type:* aws-cdk-lib.aws_elasticloadbalancingv2.ApplicationProtocolVersion
+
+---
+
 ### VpcEndpointConfig <a name="VpcEndpointConfig" id="@smallcase/cdk-vpc-module.VpcEndpointConfig"></a>
 
 #### Initializer <a name="Initializer" id="@smallcase/cdk-vpc-module.VpcEndpointConfig.Initializer"></a>
@@ -579,6 +850,89 @@ public readonly securityGroupRules: SecurityGroupRule[];
 
 ---
 
+### VpcEndpontServiceConfig <a name="VpcEndpontServiceConfig" id="@smallcase/cdk-vpc-module.VpcEndpontServiceConfig"></a>
+
+#### Initializer <a name="Initializer" id="@smallcase/cdk-vpc-module.VpcEndpontServiceConfig.Initializer"></a>
+
+```typescript
+import { VpcEndpontServiceConfig } from '@smallcase/cdk-vpc-module'
+
+const vpcEndpontServiceConfig: VpcEndpontServiceConfig = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpontServiceConfig.property.alb">alb</a></code> | <code><a href="#@smallcase/cdk-vpc-module.LoadBalancerConfig">LoadBalancerConfig</a></code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpontServiceConfig.property.name">name</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpontServiceConfig.property.nlb">nlb</a></code> | <code><a href="#@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig">NetworkLoadBalancerConfig</a></code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpontServiceConfig.property.acceptanceRequired">acceptanceRequired</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpontServiceConfig.property.additionalTags">additionalTags</a></code> | <code>{[ key: string ]: string}</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpontServiceConfig.property.allowedPrincipals">allowedPrincipals</a></code> | <code>string[]</code> | *No description.* |
+
+---
+
+##### `alb`<sup>Required</sup> <a name="alb" id="@smallcase/cdk-vpc-module.VpcEndpontServiceConfig.property.alb"></a>
+
+```typescript
+public readonly alb: LoadBalancerConfig;
+```
+
+- *Type:* <a href="#@smallcase/cdk-vpc-module.LoadBalancerConfig">LoadBalancerConfig</a>
+
+---
+
+##### `name`<sup>Required</sup> <a name="name" id="@smallcase/cdk-vpc-module.VpcEndpontServiceConfig.property.name"></a>
+
+```typescript
+public readonly name: string;
+```
+
+- *Type:* string
+
+---
+
+##### `nlb`<sup>Required</sup> <a name="nlb" id="@smallcase/cdk-vpc-module.VpcEndpontServiceConfig.property.nlb"></a>
+
+```typescript
+public readonly nlb: NetworkLoadBalancerConfig;
+```
+
+- *Type:* <a href="#@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig">NetworkLoadBalancerConfig</a>
+
+---
+
+##### `acceptanceRequired`<sup>Optional</sup> <a name="acceptanceRequired" id="@smallcase/cdk-vpc-module.VpcEndpontServiceConfig.property.acceptanceRequired"></a>
+
+```typescript
+public readonly acceptanceRequired: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `additionalTags`<sup>Optional</sup> <a name="additionalTags" id="@smallcase/cdk-vpc-module.VpcEndpontServiceConfig.property.additionalTags"></a>
+
+```typescript
+public readonly additionalTags: {[ key: string ]: string};
+```
+
+- *Type:* {[ key: string ]: string}
+
+---
+
+##### `allowedPrincipals`<sup>Optional</sup> <a name="allowedPrincipals" id="@smallcase/cdk-vpc-module.VpcEndpontServiceConfig.property.allowedPrincipals"></a>
+
+```typescript
+public readonly allowedPrincipals: string[];
+```
+
+- *Type:* string[]
+
+---
+
 ### VPCProps <a name="VPCProps" id="@smallcase/cdk-vpc-module.VPCProps"></a>
 
 #### Initializer <a name="Initializer" id="@smallcase/cdk-vpc-module.VPCProps.Initializer"></a>
@@ -598,6 +952,7 @@ const vPCProps: VPCProps = { ... }
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.natEipAllocationIds">natEipAllocationIds</a></code> | <code>string[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.peeringConfigs">peeringConfigs</a></code> | <code>{[ key: string ]: <a href="#@smallcase/cdk-vpc-module.PeeringConfig">PeeringConfig</a>}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.vpcEndpoints">vpcEndpoints</a></code> | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig">VpcEndpointConfig</a>[]</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.vpcEndpointServices">vpcEndpointServices</a></code> | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpontServiceConfig">VpcEndpontServiceConfig</a>[]</code> | *No description.* |
 
 ---
 
@@ -648,6 +1003,16 @@ public readonly vpcEndpoints: VpcEndpointConfig[];
 ```
 
 - *Type:* <a href="#@smallcase/cdk-vpc-module.VpcEndpointConfig">VpcEndpointConfig</a>[]
+
+---
+
+##### `vpcEndpointServices`<sup>Optional</sup> <a name="vpcEndpointServices" id="@smallcase/cdk-vpc-module.VPCProps.property.vpcEndpointServices"></a>
+
+```typescript
+public readonly vpcEndpointServices: VpcEndpontServiceConfig[];
+```
+
+- *Type:* <a href="#@smallcase/cdk-vpc-module.VpcEndpontServiceConfig">VpcEndpontServiceConfig</a>[]
 
 ---
 

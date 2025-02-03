@@ -548,20 +548,6 @@ export class Network extends Construct {
     // eslint-disable-next-line max-len
     const nlbVpcSubnets = nlb.subnetGroupName ? this.mergeSubnetsByGroupNames(name, ec2.InterfaceVpcEndpointService, [nlb.subnetGroupName]) : undefined;
 
-    // const NLB = nlb.existingArn ? elbv2.NetworkLoadBalancer.fromNetworkLoadBalancerAttributes(this, `${name}ExistingNlb`, {
-    //   loadBalancerArn: nlb.existingArn,
-    //   vpc: this.vpc,
-    // }) : new elbv2.NetworkLoadBalancer(this, `${name}nlb`, {
-    //   vpc: this.vpc,
-    //   vpcSubnets: nlbVpcSubnets,
-    //   internetFacing: nlb.internetFacing ? nlb.internetFacing : false,
-    //   securityGroups: [nlbSecurityGroup!],
-    // });
-
-
-    // const albListener = ALB.addListener('AlbListener', {
-    //   port: 443, // HTTP Listener
-    // });
     if (alb.existingArn == undefined) {
       ALB = new elbv2.ApplicationLoadBalancer(this, `${name}alb`, {
         vpc: this.vpc,
@@ -612,18 +598,6 @@ export class Network extends Construct {
       internetFacing: nlb.internetFacing ? nlb.internetFacing : false,
       securityGroups: [nlbSecurityGroup!],
     });
-
-    // if (alb.existingArn) {
-    //   const nlbTargetGroup = new elbv2.NetworkTargetGroup(this, `NLBTargetGroup${name}`, {
-    //     port: 443,
-    //     vpc: this.vpc,
-    //     protocol: elbv2.Protocol.TCP,
-    //     targets: [new targets.AlbArnTarget(alb.existingArn, 443)],
-    //   });
-    //   nlbTargetGroups.push(nlbTargetGroup);
-    //   albListeners = this.getLoadBalancerListener(alb.existingArn, true, name);
-    //   albOutputArn = alb.existingArn;
-    // }
     if (nlb.certificates != undefined) {
       const certificates: acm.ICertificate[] = nlb.certificates.map((certiArn, index) => {
         return acm.Certificate.fromCertificateArn(this, `${name}-importNlbCert-${index}`, certiArn);

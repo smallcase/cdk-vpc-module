@@ -1079,7 +1079,6 @@ public readonly routeTableId: string;
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.subnetType">subnetType</a></code> | <code>aws-cdk-lib.aws_ec2.SubnetType</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.egressNetworkACL">egressNetworkACL</a></code> | <code><a href="#@smallcase/cdk-vpc-module.NetworkACL">NetworkACL</a>[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.ingressNetworkACL">ingressNetworkACL</a></code> | <code><a href="#@smallcase/cdk-vpc-module.NetworkACL">NetworkACL</a>[]</code> | *No description.* |
-| <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.isMigration">isMigration</a></code> | <code>boolean</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.routes">routes</a></code> | <code><a href="#@smallcase/cdk-vpc-module.AddRouteOptions">AddRouteOptions</a>[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.tags">tags</a></code> | <code>{[ key: string ]: string}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.useSubnetForNAT">useSubnetForNAT</a></code> | <code>boolean</code> | *No description.* |
@@ -1143,16 +1142,6 @@ public readonly ingressNetworkACL: NetworkACL[];
 ```
 
 - *Type:* <a href="#@smallcase/cdk-vpc-module.NetworkACL">NetworkACL</a>[]
-
----
-
-##### `isMigration`<sup>Optional</sup> <a name="isMigration" id="@smallcase/cdk-vpc-module.ISubnetsProps.property.isMigration"></a>
-
-```typescript
-public readonly isMigration: boolean;
-```
-
-- *Type:* boolean
 
 ---
 

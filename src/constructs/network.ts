@@ -4,6 +4,7 @@ import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as targets from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets';
 import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
+import { RouteTableManager } from './routeTableManager';
 import { ObjToStrMap } from '../utils/common';
 export interface NetworkACL {
   readonly cidr: ec2.AclCidr;
@@ -61,6 +62,7 @@ export interface ISubnetsProps {
   readonly routes?: AddRouteOptions[];
   readonly tags?: Record<string, string>;
   readonly useSubnetForNAT?: boolean;
+  readonly isMigration?: boolean;
 }
 export interface VPCProps {
   readonly vpc: ec2.VpcProps;
@@ -256,6 +258,14 @@ export class Network extends Construct {
       );
     }
 
+    // Create a single RouteTableManager for the entire subnet group if migration is enabled
+    const routeTableManager = option.isMigration ? new RouteTableManager(this, `${option.subnetGroupName}RouteTableManager`, {
+      vpc,
+      subnetGroupName: option.subnetGroupName,
+      routes: option.routes,
+      peeringConnectionId,
+    }) : undefined;
+
     option.availabilityZones.forEach((az, index) => {
       let subnet: ec2.PrivateSubnet | ec2.PublicSubnet =
         option.subnetType === ec2.SubnetType.PUBLIC
@@ -267,7 +277,6 @@ export class Network extends Construct {
               cidrBlock: option.cidrBlock[index],
               vpcId: vpc.vpcId,
               mapPublicIpOnLaunch: true,
-
             },
           )
           : new ec2.PrivateSubnet(
@@ -280,31 +289,35 @@ export class Network extends Construct {
               mapPublicIpOnLaunch: false,
             },
           );
-      option.routes?.forEach((route, routeIndex) => {
-        if (peeringConnectionId != undefined && route.existingVpcPeeringRouteKey != undefined) {
-          let routeId: ec2.CfnVPCPeeringConnection | undefined = peeringConnectionId[route.existingVpcPeeringRouteKey];
-          if (routeId != undefined) {
+      if (option.isMigration && routeTableManager) {
+        routeTableManager.associateSubnet(subnet, index);
+      } else {
+        option.routes?.forEach((route, routeIndex) => {
+          if (peeringConnectionId != undefined && route.existingVpcPeeringRouteKey != undefined) {
+            let routeId: ec2.CfnVPCPeeringConnection | undefined = peeringConnectionId[route.existingVpcPeeringRouteKey];
+            if (routeId != undefined) {
+              subnet.addRoute(
+                `${option.subnetGroupName}${routeIndex}RouteEntry`,
+                {
+                  routerId: routeId.ref,
+                  routerType: route.routerType,
+                  destinationCidrBlock: route.destinationCidrBlock,
+                },
+              );
+            }
+          } else if (route.routerId != undefined) {
             subnet.addRoute(
               `${option.subnetGroupName}${routeIndex}RouteEntry`,
               {
-                routerId: routeId.ref,
+                routerId: route.routerId ?? '',
                 routerType: route.routerType,
                 destinationCidrBlock: route.destinationCidrBlock,
               },
             );
           }
-        } else if (route.routerId != undefined) {
-          subnet.addRoute(
-            `${option.subnetGroupName}${routeIndex}RouteEntry`,
-            {
-              routerId: route.routerId ?? '',
-              routerType: route.routerType,
-              destinationCidrBlock: route.destinationCidrBlock,
-            },
-          );
-        }
+        });
+      }
 
-      });
       Tags.of(subnet).add(SUBNETNAME_TAG, option.subnetGroupName);
       Tags.of(subnet).add(SUBNETTYPE_TAG, option.subnetType);
       if (option.tags != undefined) {

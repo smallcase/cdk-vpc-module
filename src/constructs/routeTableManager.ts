@@ -8,6 +8,9 @@ export interface RouteTableManagerProps {
   readonly subnetGroupName: string;
   readonly routes?: AddRouteOptions[];
   readonly peeringConnectionId?: { [key: string]: ec2.CfnVPCPeeringConnection };
+  readonly subnetType: ec2.SubnetType;
+  readonly natProvider: ec2.NatProvider;
+  readonly internetGateway: ec2.CfnInternetGateway;
 }
 
 export class RouteTableManager extends Construct {
@@ -56,6 +59,27 @@ export class RouteTableManager extends Construct {
         });
       }
     });
+
+    // Add default routes based on subnet type
+    if (props.subnetType === ec2.SubnetType.PUBLIC) {
+      // Add internet route for public subnets
+      new ec2.CfnRoute(this.nestedStack, `${props.subnetGroupName}-InternetRoute`, {
+        routeTableId: this.routeTable.ref,
+        destinationCidrBlock: '0.0.0.0/0',
+        gatewayId: props.internetGateway.ref,
+      });
+    } else if (props.subnetType === ec2.SubnetType.PRIVATE_WITH_EGRESS) {
+      // Add NAT route for private subnets
+      const natGateway = props.natProvider.configuredGateways[0];
+      console.log('natGateway', natGateway);
+      if (natGateway) {
+        new ec2.CfnRoute(this.nestedStack, `${props.subnetGroupName}-NatRoute`, {
+          routeTableId: this.routeTable.ref,
+          destinationCidrBlock: '0.0.0.0/0',
+          natGatewayId: natGateway.gatewayId,
+        });
+      }
+    }
   }
 
   public associateSubnet(subnet: ec2.ISubnet, index: number): void {

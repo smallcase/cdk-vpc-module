@@ -58,7 +58,7 @@ Returns a string representation of this construct.
 ##### `createSubnet` <a name="createSubnet" id="@smallcase/cdk-vpc-module.Network.createSubnet"></a>
 
 ```typescript
-public createSubnet(option: ISubnetsProps, vpc: Vpc, peeringConnectionId?: PeeringConnectionInternalType): Subnet[]
+public createSubnet(option: ISubnetsProps, vpc: Vpc): Subnet[]
 ```
 
 ###### `option`<sup>Required</sup> <a name="option" id="@smallcase/cdk-vpc-module.Network.createSubnet.parameter.option"></a>
@@ -70,12 +70,6 @@ public createSubnet(option: ISubnetsProps, vpc: Vpc, peeringConnectionId?: Peeri
 ###### `vpc`<sup>Required</sup> <a name="vpc" id="@smallcase/cdk-vpc-module.Network.createSubnet.parameter.vpc"></a>
 
 - *Type:* aws-cdk-lib.aws_ec2.Vpc
-
----
-
-###### `peeringConnectionId`<sup>Optional</sup> <a name="peeringConnectionId" id="@smallcase/cdk-vpc-module.Network.createSubnet.parameter.peeringConnectionId"></a>
-
-- *Type:* <a href="#@smallcase/cdk-vpc-module.PeeringConnectionInternalType">PeeringConnectionInternalType</a>
 
 ---
 
@@ -111,7 +105,6 @@ Any object.
 | --- | --- | --- |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.node">node</a></code> | <code>constructs.Node</code> | The tree node. |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.endpointOutputs">endpointOutputs</a></code> | <code>{[ key: string ]: aws-cdk-lib.aws_ec2.InterfaceVpcEndpoint \| aws-cdk-lib.aws_ec2.GatewayVpcEndpoint}</code> | *No description.* |
-| <code><a href="#@smallcase/cdk-vpc-module.Network.property.natProvider">natProvider</a></code> | <code>aws-cdk-lib.aws_ec2.NatProvider</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.securityGroupOutputs">securityGroupOutputs</a></code> | <code>{[ key: string ]: aws-cdk-lib.aws_ec2.SecurityGroup}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.vpc">vpc</a></code> | <code>aws-cdk-lib.aws_ec2.Vpc</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.natSubnets">natSubnets</a></code> | <code>aws-cdk-lib.aws_ec2.PublicSubnet[]</code> | *No description.* |
@@ -140,16 +133,6 @@ public readonly endpointOutputs: {[ key: string ]: InterfaceVpcEndpoint | Gatewa
 ```
 
 - *Type:* {[ key: string ]: aws-cdk-lib.aws_ec2.InterfaceVpcEndpoint | aws-cdk-lib.aws_ec2.GatewayVpcEndpoint}
-
----
-
-##### `natProvider`<sup>Required</sup> <a name="natProvider" id="@smallcase/cdk-vpc-module.Network.property.natProvider"></a>
-
-```typescript
-public readonly natProvider: NatProvider;
-```
-
-- *Type:* aws-cdk-lib.aws_ec2.NatProvider
 
 ---
 

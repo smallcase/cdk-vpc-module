@@ -157,7 +157,7 @@ export class Network extends Construct {
   constructor(scope: Construct, id: string, props: VPCProps) {
     super(scope, id);
     this.vpc = new ec2.Vpc(this, 'VPC', props.vpc);
-    
+
     if (props.peeringConfigs) {
       const convertPeeringConfig: Map<string, PeeringConfig> = ObjToStrMap(props.peeringConfigs);
       convertPeeringConfig.forEach((createVpcPeering, key) => {
@@ -181,7 +181,7 @@ export class Network extends Construct {
       'InternetGateway',
       {},
     );
-     new ec2.CfnVPCGatewayAttachment(this, 'VPCGatewayAttachement', {
+    new ec2.CfnVPCGatewayAttachment(this, 'VPCGatewayAttachement', {
       internetGatewayId: internetGateway.ref,
       vpcId: this.vpc.vpcId,
     });
@@ -189,10 +189,10 @@ export class Network extends Construct {
     // Initialize NAT provider after collecting all subnets
     const natProvider = props.natEipAllocationIds?.length === this.natSubnets?.length && props.natEipAllocationIds?.length > 0
       ? ec2.NatProvider.gateway({
-          eipAllocationIds: props.natEipAllocationIds,
-        }) : ec2.NatProvider.gateway();
+        eipAllocationIds: props.natEipAllocationIds,
+      }) : ec2.NatProvider.gateway();
 
-    
+
     // First pass: collect all subnets
     props.subnets.forEach((subnetProps) => {
       let subnet = this.createSubnet(subnetProps, this.vpc);
@@ -235,7 +235,7 @@ export class Network extends Construct {
         peeringConnectionId: this.peeringConnectionIds,
         subnetType: subnetProps.subnetType,
         natProvider: natProvider,
-        internetGateway: internetGateway
+        internetGateway: internetGateway,
       });
       this.subnets[subnetProps.subnetGroupName].forEach((subnet, index) => {
         routeTableManager.associateSubnet(subnet, index);

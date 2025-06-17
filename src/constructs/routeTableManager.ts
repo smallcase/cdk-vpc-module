@@ -10,7 +10,7 @@ export interface RouteTableManagerProps {
   readonly peeringConnectionId?: { [key: string]: ec2.CfnVPCPeeringConnection };
   readonly subnetType: ec2.SubnetType;
   readonly natProvider: ec2.NatProvider;
-  readonly internetGateway: ec2.CfnInternetGateway
+  readonly internetGateway: ec2.CfnInternetGateway;
 }
 
 export class RouteTableManager extends Construct {

@@ -175,6 +175,48 @@ export class VPCStack extends Stack {
             }
           ],
         },
+      ],
+      vpcEndpointServices: [
+        {
+          name: "my-vpce-service",
+          alb: {
+            subnetGroupName: "Public",
+            internetFacing: true,
+            certificates: ["arn:aws:acm:region:account:certificate/cert-id"],
+            securityGroupRules: [
+              {
+                peer: ec2.Peer.ipv4("10.10.0.0/16"),
+                port: ec2.Port.tcp(443),
+                description: "Allow HTTPS from VPC"
+              }
+            ],
+            targetGroups: [
+              {
+                host: "api.example.com",
+                applicationPort: 8080,
+                healthCheckPath: "/health",
+                healthCheckProtocol: elbv2.Protocol.HTTP,
+                priority: 1
+              }
+            ]
+          },
+          nlb: {
+            subnetGroupName: "Private",
+            securityGroupRules: [
+              {
+                peer: ec2.Peer.ipv4("10.10.0.0/16"),
+                port: ec2.Port.tcp(443),
+                description: "Allow HTTPS from VPC"
+              }
+            ]
+          },
+          allowedPrincipals: ["arn:aws:iam::123456789012:root"],
+          acceptanceRequired: false,
+          additionalTags: {
+            Environment: "Production",
+            Service: "API"
+          }
+        }
       ]
     });
   }
@@ -293,3 +335,142 @@ Here’s a breakdown of the configuration options available:
 4. externalSubnets: Specify external subnets if you need to define subnets manually (each with an id, availabilityZone, and routeTableId).
 5. iamPolicyStatements: (Optional) Attach IAM policy statements to control access to the endpoint.
 6. additionalTags: (Optional) Add custom tags to the VPC Endpoint for easier identification and tracking.
+
+## VPC Endpoint Services
+
+VPC Endpoint Services allow you to create your own services that can be accessed through VPC endpoints. This feature enables you to expose your applications as AWS services within your VPC.
+
+### Features
+- **Application Load Balancer (ALB) Integration**: Configure ALB with target groups, certificates, and security groups
+- **Network Load Balancer (NLB) Integration**: Set up NLB with custom security groups and certificates
+- **Access Control**: Configure allowed principals and acceptance requirements
+- **Flexible Subnet Configuration**: Deploy across multiple subnet groups
+- **Custom Tagging**: Apply tags for resource management
+
+### VPC Endpoint Services Configuration
+
+You can define VPC Endpoint Services in the `vpcEndpointServices: []` configuration array. Each service can be customized with ALB/NLB configurations, security groups, and access controls.
+
+#### Using Existing ALB
+
+You can also use an existing Application Load Balancer by providing its ARN and security group ID. This is useful when you want to integrate with already deployed load balancers.
+
+```typescript
+vpcEndpointServices: [
+  {
+    name: "my-vpce-service",
+    alb: {
+      subnetGroupName: "Public",
+      internetFacing: true,
+      certificates: ["arn:aws:acm:region:account:certificate/cert-id"],
+      securityGroupRules: [
+        {
+          peer: ec2.Peer.ipv4("10.10.0.0/16"),
+          port: ec2.Port.tcp(443),
+          description: "Allow HTTPS from VPC"
+        }
+      ],
+      targetGroups: [
+        {
+          host: "api.example.com",
+          applicationPort: 8080,
+          healthCheckPath: "/health",
+          healthCheckProtocol: elbv2.Protocol.HTTP,
+          priority: 1
+        }
+      ]
+    },
+    nlb: {
+      subnetGroupName: "Private",
+      securityGroupRules: [
+        {
+          peer: ec2.Peer.ipv4("10.10.0.0/16"),
+          port: ec2.Port.tcp(443),
+          description: "Allow HTTPS from VPC"
+        }
+      ]
+    },
+    allowedPrincipals: ["arn:aws:iam::123456789012:root"],
+    acceptanceRequired: false,
+    additionalTags: {
+      Environment: "Production",
+      Service: "API"
+    }
+  },
+  {
+    name: "existing-alb-vpce-service",
+    alb: {
+      existingArn: "arn:aws:elasticloadbalancing:region:account:loadbalancer/app/existing-alb/1234567890abcdef",
+      existingSecurityGroupId: "sg-1234567890abcdef",
+      targetGroups: [
+        {
+          host: "service.example.com",
+          applicationPort: 9000,
+          healthCheckPath: "/status",
+          healthCheckProtocol: elbv2.Protocol.HTTP,
+          priority: 1
+        },
+        {
+          host: "admin.example.com",
+          applicationPort: 8080,
+          healthCheckPath: "/admin/health",
+          healthCheckProtocol: elbv2.Protocol.HTTP,
+          priority: 2
+        }
+      ]
+    },
+    nlb: {
+      subnetGroupName: "Private",
+      securityGroupRules: [
+        {
+          peer: ec2.Peer.ipv4("10.10.0.0/16"),
+          port: ec2.Port.tcp(443),
+          description: "Allow HTTPS from VPC"
+        }
+      ]
+    },
+    allowedPrincipals: ["arn:aws:iam::123456789012:root"],
+    acceptanceRequired: true,
+    additionalTags: {
+      Environment: "Staging",
+      Service: "LegacyAPI"
+    }
+  }
+]
+```
+
+### Configuration Options
+
+#### ALB Configuration
+- **subnetGroupName**: Subnet group where the ALB will be deployed (not required when using existingArn)
+- **internetFacing**: Whether the ALB should be internet-facing (default: false, not used when using existingArn)
+- **certificates**: Array of ACM certificate ARNs for HTTPS termination (not used when using existingArn)
+- **securityGroupRules**: Security group rules for the ALB (not used when using existingSecurityGroupId)
+- **targetGroups**: Array of target group configurations
+- **existingArn**: Use existing ALB ARN instead of creating new one
+- **existingSecurityGroupId**: Use existing security group ID
+
+**Note**: When using `existingArn`, the module will use the existing ALB instead of creating a new one. In this case, `subnetGroupName`, `internetFacing`, `certificates`, and `securityGroupRules` are ignored. The `targetGroups` configuration will create listener rules on the existing ALB.
+
+#### NLB Configuration
+- **subnetGroupName**: Subnet group where the NLB will be deployed
+- **securityGroupRules**: Security group rules for the NLB
+- **certificates**: Array of ACM certificate ARNs for HTTPS termination
+- **internetFacing**: Whether the NLB should be internet-facing (default: false)
+- **existingSecurityGroupId**: Use existing security group ID
+
+#### Target Group Configuration
+- **host**: Host header for routing
+- **applicationPort**: Port where the application is running
+- **healthCheckPath**: Health check path (default: "/")
+- **healthCheckProtocol**: Health check protocol (default: HTTP)
+- **protocolVersion**: Application protocol version (default: HTTP1)
+- **protocol**: Application protocol (default: HTTP)
+- **healthCheckPort**: Health check port (default: applicationPort)
+- **priority**: Rule priority for routing
+
+#### Service Configuration
+- **name**: Unique name for the VPC Endpoint Service
+- **allowedPrincipals**: Array of IAM principal ARNs allowed to connect
+- **acceptanceRequired**: Whether manual acceptance is required (default: true)
+- **additionalTags**: Custom tags for the service

@@ -11,6 +11,7 @@ export interface RouteTableManagerProps {
   readonly subnetType: ec2.SubnetType;
   readonly natProvider: ec2.NatProvider;
   readonly internetGateway: ec2.CfnInternetGateway;
+  readonly subnetAvailabilityZone?: string;
 }
 
 export class RouteTableManager extends Construct {
@@ -69,15 +70,29 @@ export class RouteTableManager extends Construct {
         gatewayId: props.internetGateway.ref,
       });
     } else if (props.subnetType === ec2.SubnetType.PRIVATE_WITH_EGRESS) {
-      // Add NAT route for private subnets
-      const natGateway = props.natProvider.configuredGateways[0];
-      console.log('natGateway', natGateway);
-      if (natGateway) {
-        new ec2.CfnRoute(this.nestedStack, `${props.subnetGroupName}-NatRoute`, {
-          routeTableId: this.routeTable.ref,
-          destinationCidrBlock: '0.0.0.0/0',
-          natGatewayId: natGateway.gatewayId,
-        });
+      // Add NAT routes for private subnets
+      if (props.subnetAvailabilityZone && props.natProvider.configuredGateways && props.natProvider.configuredGateways.length > 0) {
+        // Use the specific NAT Gateway provided (for multiple NAT Gateway scenarios)
+        const natGateway = props.natProvider.configuredGateways.find(natg => { return natg.az === props.subnetAvailabilityZone; });
+        if (natGateway && natGateway.gatewayId) {
+          new ec2.CfnRoute(this.nestedStack, `${props.subnetGroupName}-NatRoute`, {
+            routeTableId: this.routeTable.ref,
+            destinationCidrBlock: '0.0.0.0/0',
+            natGatewayId: natGateway.gatewayId,
+          });
+        }
+      } else if (props.natProvider.configuredGateways && props.natProvider.configuredGateways.length > 0) {
+        // Use the first NAT Gateway (for single NAT Gateway scenarios)
+        const natGateway = props.natProvider.configuredGateways[0];
+        if (natGateway && natGateway.gatewayId) {
+          new ec2.CfnRoute(this.nestedStack, `${props.subnetGroupName}-NatRoute`, {
+            routeTableId: this.routeTable.ref,
+            destinationCidrBlock: '0.0.0.0/0',
+            natGatewayId: natGateway.gatewayId,
+          });
+        }
+      } else {
+        console.warn(`No configured NAT Gateways found for ${props.subnetGroupName}. NAT routes may not be created properly.`);
       }
     }
   }

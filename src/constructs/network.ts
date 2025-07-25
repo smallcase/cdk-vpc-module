@@ -186,8 +186,8 @@ export class Network extends Construct {
       vpcId: this.vpc.vpcId,
     });
 
-    // Initialize NAT provider after collecting all subnets
-    const natProvider = props.natEipAllocationIds?.length === this.natSubnets?.length && props.natEipAllocationIds?.length > 0
+    // Initialize NAT provider with EIP allocation IDs if provided
+    const natProvider = props.natEipAllocationIds && props.natEipAllocationIds.length > 0
       ? ec2.NatProvider.gateway({
         eipAllocationIds: props.natEipAllocationIds,
       }) : ec2.NatProvider.gateway();
@@ -226,21 +226,36 @@ export class Network extends Construct {
       });
     }
 
-    // Second pass: configure routes after NAT is configured
-    props.subnets.forEach((subnetProps) => {
-      const routeTableManager = new RouteTableManager(this, `${subnetProps.subnetGroupName}RouteTableManager`, {
-        vpc: this.vpc,
-        subnetGroupName: subnetProps.subnetGroupName,
-        routes: subnetProps.routes,
-        peeringConnectionId: this.peeringConnectionIds,
-        subnetType: subnetProps.subnetType,
-        natProvider: natProvider,
-        internetGateway: internetGateway,
-      });
-      this.subnets[subnetProps.subnetGroupName].forEach((subnet, index) => {
-        routeTableManager.associateSubnet(subnet, index);
-      });
+    // Determine routing strategy based on number of NAT Gateways
+    const natGatewayCount = this.natSubnets.length;
+    const useSingleRouteTable = natGatewayCount <= 1;
+
+    // Add output to show which strategy is being used
+    new CfnOutput(this, 'RoutingStrategy', {
+      value: useSingleRouteTable ? 'Route Table per Subnet Group' : 'Route Table per Subnet',
+      description: 'Routing strategy based on NAT Gateway count',
     });
+
+    new CfnOutput(this, 'NATGatewayCount', {
+      value: natGatewayCount.toString(),
+      description: 'Number of NAT Gateways configured',
+    });
+
+    // Add output for EIP allocation IDs if provided
+    if (props.natEipAllocationIds && props.natEipAllocationIds.length > 0) {
+      new CfnOutput(this, 'NATEipAllocationIds', {
+        value: props.natEipAllocationIds.join(','),
+        description: 'EIP allocation IDs used for NAT Gateways',
+      });
+    }
+
+    if (useSingleRouteTable) {
+      // Single NAT Gateway: One route table per subnet group
+      this.configureSubnetGroupRouteTables(props, natProvider, internetGateway);
+    } else {
+      // Multiple NAT Gateways: One route table per subnet to avoid duplicate 0.0.0.0/0 entries
+      this.configureSubnetRouteTables(props, natProvider, internetGateway);
+    }
 
     // this.pbSubnets.forEach((pb) => {
     //   pb.addDefaultInternetRoute(internetGateway.ref, att);
@@ -258,6 +273,76 @@ export class Network extends Construct {
         this.addVpcEndpointService(vpcEndpointServiceConfig);
       }
     }
+  }
+
+  /**
+   * Configure route tables per subnet group (for single NAT Gateway)
+   */
+  private configureSubnetGroupRouteTables(
+    props: VPCProps,
+    natProvider: ec2.NatProvider,
+    internetGateway: ec2.CfnInternetGateway,
+  ) {
+    // One route table per subnet group
+    props.subnets.forEach((subnetProps) => {
+      const routeTableManager = new RouteTableManager(this, `${subnetProps.subnetGroupName}RouteTableManager`, {
+        vpc: this.vpc,
+        subnetGroupName: subnetProps.subnetGroupName,
+        routes: subnetProps.routes,
+        peeringConnectionId: this.peeringConnectionIds,
+        subnetType: subnetProps.subnetType,
+        natProvider: natProvider,
+        internetGateway: internetGateway,
+      });
+      this.subnets[subnetProps.subnetGroupName].forEach((subnet, index) => {
+        routeTableManager.associateSubnet(subnet, index);
+      });
+    });
+  }
+
+  /**
+   * Configure route tables per subnet (for multiple NAT Gateways)
+   * This prevents duplicate 0.0.0/0 entries in the same route table
+   */
+  private configureSubnetRouteTables(
+    props: VPCProps,
+    natProvider: ec2.NatProvider,
+    internetGateway: ec2.CfnInternetGateway,
+  ) {
+    // One route table per subnet to avoid duplicate 0.0.0.0/0 entries
+    props.subnets.forEach((subnetProps) => {
+      this.subnets[subnetProps.subnetGroupName].forEach((subnet, index) => {
+        // Find the NAT Gateway in the same AZ as the subnet
+        //let specificNatGateway: ec2.CfnNatGateway | undefined;
+        // if (subnetProps.subnetType === ec2.SubnetType.PRIVATE_WITH_NAT && natProvider.configuredGateways) {
+        //   // Try to find NAT Gateway in the same AZ
+        //   const subnetAZ = subnet.availabilityZone;
+        //   const natGatewayInSameAZ = natProvider.configuredGateways.find(natGateway => {
+        //     return natGateway.az === subnetAZ;
+        //   });
+
+        //   if (natGatewayInSameAZ) {
+        //     // Use the NAT Gateway from the same AZ
+        //     specificNatGateway = natGatewayInSameAZ as any; // Type assertion for CfnNatGateway
+        //   } else {
+        //     // Fallback to first NAT Gateway if no match found
+        //     specificNatGateway = natProvider.configuredGateways[0] as any;
+        //   }
+        // }
+
+        const routeTableManager = new RouteTableManager(this, `${subnetProps.subnetGroupName}Subnet${index}RouteTableManager`, {
+          vpc: this.vpc,
+          subnetGroupName: `${subnetProps.subnetGroupName}Subnet${index}`,
+          routes: subnetProps.routes,
+          peeringConnectionId: this.peeringConnectionIds,
+          subnetType: subnetProps.subnetType,
+          natProvider: natProvider,
+          internetGateway: internetGateway,
+          subnetAvailabilityZone: subnet.availabilityZone,
+        });
+        routeTableManager.associateSubnet(subnet, 0); // Only one subnet per route table
+      });
+    });
   }
 
   createSubnet(option: ISubnetsProps, vpc: ec2.Vpc) {

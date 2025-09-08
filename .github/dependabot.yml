@@ -11,8 +11,6 @@ updates:
       - {}
       - {}
     ignore:
-      - {}
-      - {}
       - dependency-name: projen
     labels:
       - dependencies

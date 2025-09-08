@@ -37,12 +37,10 @@ const project = new AwsCdkConstructLibrary({
   dependabotOptions: {
     scheduleInterval: 'weekly',
     versioningStrategy: 'lockfile-only',
-    runsOn: 'arc-runner-set',
     allow: ['npm', 'github-actions'],
-    ignore: ['aws-cdk-lib', 'constructs'],
     labels: ['dependencies', 'automerge'],
     assignees: [],
-    reviewers: [],
+    reviewers: []
   },
   mergify: false, /* Adds mergify configuration. */
   pullRequestTemplate: true, /* Include a GitHub pull request template. */

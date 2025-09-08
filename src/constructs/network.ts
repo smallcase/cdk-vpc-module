@@ -213,14 +213,6 @@ export class Network extends Construct {
       });
     }
 
-    if (useSingleRouteTable) {
-      // Single NAT Gateway: One route table per subnet group
-      this.configureSubnetGroupRouteTables(props, natProvider, internetGateway);
-    } else {
-      // Multiple NAT Gateways: One route table per subnet to avoid duplicate 0.0.0.0/0 entries
-      this.configureSubnetRouteTables(props, natProvider, internetGateway);
-    }
-
     // this.pbSubnets.forEach((pb) => {
     //   pb.addDefaultInternetRoute(internetGateway.ref, att);
     // });

@@ -33,7 +33,7 @@ const project = new AwsCdkConstructLibrary({
   },
   releaseEveryCommit: true,
   licensed: true, /* Indicates if a license should be added. */
-  dependabot: false,
+  dependabot: true,
   dependabotOptions: {
     scheduleInterval: 'weekly',
     versioningStrategy: 'lockfile-only',

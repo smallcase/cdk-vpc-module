@@ -40,8 +40,6 @@ const project = new AwsCdkConstructLibrary({
     versioningStrategy: 'lockfile-only',
     allow: ['npm', 'github-actions'],
     labels: ['dependencies', 'automerge'],
-    assignees: [],
-    reviewers: []
   },
   mergify: false, /* Adds mergify configuration. */
   pullRequestTemplate: true, /* Include a GitHub pull request template. */

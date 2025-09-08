@@ -118,10 +118,10 @@ export class Network extends Construct {
   public readonly securityGroupOutputs: { [key: string]: ec2.SecurityGroup } = {}; // Store Security Group outputs
   public readonly endpointOutputs: { [key: string]: ec2.InterfaceVpcEndpoint | ec2.GatewayVpcEndpoint } = {}; // Store Endpoint outputs
   private peeringConnectionIds: PeeringConnectionInternalType = {};
-  public readonly natProvider!: ec2.NatProvider;
   constructor(scope: Construct, id: string, props: VPCProps) {
     super(scope, id);
     this.vpc = new ec2.Vpc(this, 'VPC', props.vpc);
+
     if (props.peeringConfigs) {
       const convertPeeringConfig: Map<string, PeeringConfig> = ObjToStrMap(props.peeringConfigs);
       convertPeeringConfig.forEach((createVpcPeering, key) => {
@@ -139,6 +139,25 @@ export class Network extends Construct {
         this.peeringConnectionIds[key] = peeringConnectionIdByKey;
       });
     }
+
+    const internetGateway = new ec2.CfnInternetGateway(
+      this,
+      'InternetGateway',
+      {},
+    );
+    new ec2.CfnVPCGatewayAttachment(this, 'VPCGatewayAttachement', {
+      internetGatewayId: internetGateway.ref,
+      vpcId: this.vpc.vpcId,
+    });
+
+    // Initialize NAT provider with EIP allocation IDs if provided
+    const natProvider = props.natEipAllocationIds && props.natEipAllocationIds.length > 0
+      ? ec2.NatProvider.gateway({
+        eipAllocationIds: props.natEipAllocationIds,
+      }) : ec2.NatProvider.gateway();
+
+
+    // First pass: collect all subnets
     props.subnets.forEach((subnetProps) => {
       let subnet = this.createSubnet(subnetProps, this.vpc, this.peeringConnectionIds, props.useNestedStacks);
       this.subnets[subnetProps.subnetGroupName] = subnet;
@@ -161,40 +180,51 @@ export class Network extends Construct {
         }
       });
     });
-    const internetGateway = new ec2.CfnInternetGateway(
-      this,
-      'InternetGateway',
-      {},
-    );
-    const att = new ec2.CfnVPCGatewayAttachment(this, 'VPCGatewayAttachement', {
-      internetGatewayId: internetGateway.ref,
-      vpcId: this.vpc.vpcId,
-    });
-    this.pbSubnets.forEach((pb) => {
-      pb.addDefaultInternetRoute(internetGateway.ref, att);
-    });
+
+    // Configure NAT after collecting all subnets
     if (this.natSubnets.length > 0) {
-      if (props.natEipAllocationIds && this.natSubnets.length != props.natEipAllocationIds?.length) {
-        // eslint-disable-next-line max-len
-        throw new Error(
-          'natEipAllocationIds and natSubnets length should be  equal',
-        );
-      }
-
-      if (props.natEipAllocationIds?.length == this.natSubnets?.length) {
-        this.natProvider = ec2.NatProvider.gateway({
-          eipAllocationIds: props.natEipAllocationIds,
-        });
-      } else {
-        this.natProvider = ec2.NatProvider.gateway();
-      }
-
-      this.natProvider.configureNat({
+      natProvider.configureNat({
         vpc: this.vpc,
         natSubnets: this.natSubnets,
         privateSubnets: this.pvSubnets,
       });
     }
+
+    // Determine routing strategy based on number of NAT Gateways
+    const natGatewayCount = this.natSubnets.length;
+    const useSingleRouteTable = natGatewayCount <= 1;
+
+    // Add output to show which strategy is being used
+    new CfnOutput(this, 'RoutingStrategy', {
+      value: useSingleRouteTable ? 'Route Table per Subnet Group' : 'Route Table per Subnet',
+      description: 'Routing strategy based on NAT Gateway count',
+    });
+
+    new CfnOutput(this, 'NATGatewayCount', {
+      value: natGatewayCount.toString(),
+      description: 'Number of NAT Gateways configured',
+    });
+
+    // Add output for EIP allocation IDs if provided
+    if (props.natEipAllocationIds && props.natEipAllocationIds.length > 0) {
+      new CfnOutput(this, 'NATEipAllocationIds', {
+        value: props.natEipAllocationIds.join(','),
+        description: 'EIP allocation IDs used for NAT Gateways',
+      });
+    }
+
+    if (useSingleRouteTable) {
+      // Single NAT Gateway: One route table per subnet group
+      this.configureSubnetGroupRouteTables(props, natProvider, internetGateway);
+    } else {
+      // Multiple NAT Gateways: One route table per subnet to avoid duplicate 0.0.0.0/0 entries
+      this.configureSubnetRouteTables(props, natProvider, internetGateway);
+    }
+
+    // this.pbSubnets.forEach((pb) => {
+    //   pb.addDefaultInternetRoute(internetGateway.ref, att);
+    // });
+
     new CfnOutput(this, 'VpcId', { value: this.vpc.vpcId });
     // Add VPC endpoints if specified in the props
     if (props?.vpcEndpoints) {

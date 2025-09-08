@@ -1,0 +1,70 @@
+# Auto-approve Dependabot PRs
+# Based on GitHub's official documentation for Dependabot automation
+
+name: Dependabot auto-approve
+on: 
+  pull_request:
+    types: [opened, reopened, synchronize]
+  workflow_run:
+    workflows: ["Dependabot auto-label"]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  dependabot:
+    runs-on: arc-runner-set
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@d7267f607e9d3fb96fc2fbe83e0af444713e90b7
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      
+      - name: Auto-approve and add automerge label for patch updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' &&
+          steps.metadata.outputs.update-type != null
+        run: |
+          gh pr review --approve "$PR_URL"
+          gh pr edit "$PR_URL" --add-label "automerge"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+      
+      - name: Auto-approve and add automerge label for minor updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-minor' &&
+          steps.metadata.outputs.update-type != null
+        run: |
+          gh pr review --approve "$PR_URL"
+          gh pr edit "$PR_URL" --add-label "automerge"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+      
+      - name: Auto-approve and add automerge label for indirect dependencies
+        if: steps.metadata.outputs.dependency-type == 'indirect'
+        run: |
+          gh pr review --approve "$PR_URL"
+          gh pr edit "$PR_URL" --add-label "automerge"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+      
+      - name: Comment on major updates (require manual review)
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        run: |
+          gh pr comment "$PR_URL" --body "⚠️ **Major version update detected** - This requires manual review before approval."
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+      
+      - name: Comment on unknown updates (require manual review)
+        if: steps.metadata.outputs.update-type == null || steps.metadata.outputs.update-type == ''
+        run: |
+          gh pr comment "$PR_URL" --body "❓ **Unknown update type** - This requires manual review before approval."
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}

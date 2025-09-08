@@ -1,0 +1,66 @@
+# Auto-label Dependabot PRs based on dependency type and update type
+# Based on GitHub's official documentation for Dependabot automation
+
+name: Dependabot auto-label
+on: 
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  dependabot:
+    runs-on: arc-runner-set
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@d7267f607e9d3fb96fc2fbe83e0af444713e90b7
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      
+      - name: Add production dependency label
+        if: steps.metadata.outputs.dependency-type == 'direct:production'
+        run: gh pr edit "$PR_URL" --add-label "production"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+      
+      - name: Add development dependency label
+        if: steps.metadata.outputs.dependency-type == 'direct:development'
+        run: gh pr edit "$PR_URL" --add-label "dev-dependency"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+      
+      - name: Add indirect dependency label
+        if: steps.metadata.outputs.dependency-type == 'indirect'
+        run: gh pr edit "$PR_URL" --add-label "indirect-dependency"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+      
+      - name: Add patch update label
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        run: gh pr edit "$PR_URL" --add-label "patch"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+      
+      - name: Add minor update label
+        if: steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr edit "$PR_URL" --add-label "minor"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+      
+      - name: Add major update label
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        run: gh pr edit "$PR_URL" --add-label "major"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+      
+      - name: Add unknown update label
+        if: steps.metadata.outputs.update-type == null || steps.metadata.outputs.update-type == ''
+        run: gh pr edit "$PR_URL" --add-label "unknown-update"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}} 

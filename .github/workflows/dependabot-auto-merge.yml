@@ -1,0 +1,64 @@
+# Auto-merge Dependabot PRs
+# Based on GitHub's official documentation for Dependabot automation
+
+name: Dependabot auto-merge
+on: 
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependabot:
+    runs-on: arc-runner-set
+    if: github.event.pull_request.user.login == 'dependabot[bot]' || github.event.pull_request.user.login == 'mr-robot-in'
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@d7267f607e9d3fb96fc2fbe83e0af444713e90b7
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      
+      - name: Enable auto-merge for patch updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' &&
+          contains(github.event.pull_request.labels.*.name, 'automerge') &&
+          steps.metadata.outputs.update-type != null
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+      
+      - name: Enable auto-merge for minor updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-minor' &&
+          contains(github.event.pull_request.labels.*.name, 'automerge') &&
+          steps.metadata.outputs.update-type != null
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+      
+      - name: Enable auto-merge for indirect dependencies
+        if: |
+          steps.metadata.outputs.dependency-type == 'indirect' &&
+          contains(github.event.pull_request.labels.*.name, 'automerge')
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+      
+      - name: Comment on major updates (no auto-merge)
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        run: |
+          gh pr comment "$PR_URL" --body "🚨 **Major version update** - Auto-merge disabled for major updates. Please review manually."
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+      
+      - name: Comment on unknown updates (no auto-merge)
+        if: steps.metadata.outputs.update-type == null || steps.metadata.outputs.update-type == ''
+        run: |
+          gh pr comment "$PR_URL" --body "❓ **Unknown update type** - Auto-merge disabled. Please review manually."
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}

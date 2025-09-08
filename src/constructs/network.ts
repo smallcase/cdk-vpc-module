@@ -1,11 +1,10 @@
 import { aws_ec2 as ec2, CfnOutput, Tags, aws_iam as iam, Stack } from 'aws-cdk-lib';
-import * as acm from 'aws-cdk-lib/aws-certificatemanager';
-import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
-import * as targets from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets';
 import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
-import { RouteTableManager } from './routeTableManager';
+import { SubnetStack } from './subnet-stack';
+import { VpcEndpointServiceNestedStack, VpcEndpontServiceConfig } from './vpc-endpoint-service';
 import { ObjToStrMap } from '../utils/common';
+
 export interface NetworkACL {
   readonly cidr: ec2.AclCidr;
   readonly traffic: ec2.AclTraffic;
@@ -51,6 +50,7 @@ export interface AddRouteOptions {
     * @stability stable
     */
   readonly enablesInternetConnectivity?: boolean;
+  readonly routeName?: string;
 }
 export interface ISubnetsProps {
   readonly subnetGroupName: string;
@@ -62,6 +62,7 @@ export interface ISubnetsProps {
   readonly routes?: AddRouteOptions[];
   readonly tags?: Record<string, string>;
   readonly useSubnetForNAT?: boolean;
+  readonly useNestedStacks?: boolean;
 }
 export interface VPCProps {
   readonly vpc: ec2.VpcProps;
@@ -70,6 +71,7 @@ export interface VPCProps {
   readonly natEipAllocationIds?: string[];
   readonly subnets: ISubnetsProps[];
   readonly vpcEndpointServices?: VpcEndpontServiceConfig[]; // List of VPC endpoint Service to configure
+  readonly useNestedStacks?: boolean;
 }
 
 export interface PeeringConfig {
@@ -104,44 +106,6 @@ export interface VpcEndpointConfig {
   readonly externalSubnets?: IExternalVPEndpointSubnets[]; // Array of subnet IDs with availability zones
   readonly iamPolicyStatements?: iam.PolicyStatement[]; // Optional IAM policy statements for the endpoint
   readonly securityGroupRules?: SecurityGroupRule[]; // Optional list of security group rules for Interface Endpoints
-  readonly additionalTags?: { [key: string]: string }; // Optional additional tags
-}
-// Target Group Configuration Interface
-export interface TargetGroupConfig {
-  readonly host: string;
-  readonly applicationPort: number;
-  readonly healthCheckPath?: string;
-  readonly healthCheckProtocol?: elbv2.Protocol;
-  readonly protocolVersion?: elbv2.ApplicationProtocolVersion;
-  readonly protocol?: elbv2.ApplicationProtocol;
-  readonly healthCheckPort?: number;
-  readonly priority?: number;
-}
-
-export interface LoadBalancerConfig {
-  readonly existingArn?: string;
-  readonly existingSecurityGroupId?: string;
-  readonly subnetGroupName?: string;
-  readonly internetFacing?: boolean;
-  readonly targetGroups?: TargetGroupConfig[];
-  readonly certificates?: string[];
-  readonly securityGroupRules?: SecurityGroupRule[]; // Optional list of security group rules for Interface Endpoints
-}
-
-export interface NetworkLoadBalancerConfig {
-  readonly subnetGroupName: string;
-  readonly securityGroupRules: SecurityGroupRule[]; // Optional list of security group rules for Interface Endpoints
-  readonly existingSecurityGroupId?: string;
-  readonly certificates?: string[];
-  readonly internetFacing?: boolean;
-}
-
-export interface VpcEndpontServiceConfig {
-  readonly name: string;
-  readonly alb: LoadBalancerConfig;
-  readonly nlb: NetworkLoadBalancerConfig;
-  readonly allowedPrincipals?: string[];
-  readonly acceptanceRequired?: boolean;
   readonly additionalTags?: { [key: string]: string }; // Optional additional tags
 }
 
@@ -195,7 +159,7 @@ export class Network extends Construct {
 
     // First pass: collect all subnets
     props.subnets.forEach((subnetProps) => {
-      let subnet = this.createSubnet(subnetProps, this.vpc);
+      let subnet = this.createSubnet(subnetProps, this.vpc, this.peeringConnectionIds, props.useNestedStacks);
       this.subnets[subnetProps.subnetGroupName] = subnet;
       subnet.forEach((sb) => {
         if (sb instanceof ec2.PublicSubnet) {
@@ -249,14 +213,6 @@ export class Network extends Construct {
       });
     }
 
-    if (useSingleRouteTable) {
-      // Single NAT Gateway: One route table per subnet group
-      this.configureSubnetGroupRouteTables(props, natProvider, internetGateway);
-    } else {
-      // Multiple NAT Gateways: One route table per subnet to avoid duplicate 0.0.0.0/0 entries
-      this.configureSubnetRouteTables(props, natProvider, internetGateway);
-    }
-
     // this.pbSubnets.forEach((pb) => {
     //   pb.addDefaultInternetRoute(internetGateway.ref, att);
     // });
@@ -269,175 +225,152 @@ export class Network extends Construct {
       }
     }
     if (props?.vpcEndpointServices) {
-      for (const vpcEndpointServiceConfig of props.vpcEndpointServices) {
-        this.addVpcEndpointService(vpcEndpointServiceConfig);
-      }
-    }
-  }
-
-  /**
-   * Configure route tables per subnet group (for single NAT Gateway)
-   */
-  private configureSubnetGroupRouteTables(
-    props: VPCProps,
-    natProvider: ec2.NatProvider,
-    internetGateway: ec2.CfnInternetGateway,
-  ) {
-    // One route table per subnet group
-    props.subnets.forEach((subnetProps) => {
-      const routeTableManager = new RouteTableManager(this, `${subnetProps.subnetGroupName}RouteTableManager`, {
+      new VpcEndpointServiceNestedStack(this, 'VpcEndpointServices', {
         vpc: this.vpc,
-        subnetGroupName: subnetProps.subnetGroupName,
-        routes: subnetProps.routes,
-        peeringConnectionId: this.peeringConnectionIds,
-        subnetType: subnetProps.subnetType,
-        natProvider: natProvider,
-        internetGateway: internetGateway,
+        vpcEndpointServiceConfigs: props.vpcEndpointServices,
+        subnets: this.subnets,
       });
-      this.subnets[subnetProps.subnetGroupName].forEach((subnet, index) => {
-        routeTableManager.associateSubnet(subnet, index);
-      });
-    });
-  }
-
-  /**
-   * Configure route tables per subnet (for multiple NAT Gateways)
-   * This prevents duplicate 0.0.0/0 entries in the same route table
-   */
-  private configureSubnetRouteTables(
-    props: VPCProps,
-    natProvider: ec2.NatProvider,
-    internetGateway: ec2.CfnInternetGateway,
-  ) {
-    // One route table per subnet to avoid duplicate 0.0.0.0/0 entries
-    props.subnets.forEach((subnetProps) => {
-      this.subnets[subnetProps.subnetGroupName].forEach((subnet, index) => {
-        // Find the NAT Gateway in the same AZ as the subnet
-        //let specificNatGateway: ec2.CfnNatGateway | undefined;
-        // if (subnetProps.subnetType === ec2.SubnetType.PRIVATE_WITH_NAT && natProvider.configuredGateways) {
-        //   // Try to find NAT Gateway in the same AZ
-        //   const subnetAZ = subnet.availabilityZone;
-        //   const natGatewayInSameAZ = natProvider.configuredGateways.find(natGateway => {
-        //     return natGateway.az === subnetAZ;
-        //   });
-
-        //   if (natGatewayInSameAZ) {
-        //     // Use the NAT Gateway from the same AZ
-        //     specificNatGateway = natGatewayInSameAZ as any; // Type assertion for CfnNatGateway
-        //   } else {
-        //     // Fallback to first NAT Gateway if no match found
-        //     specificNatGateway = natProvider.configuredGateways[0] as any;
-        //   }
-        // }
-
-        const routeTableManager = new RouteTableManager(this, `${subnetProps.subnetGroupName}Subnet${index}RouteTableManager`, {
-          vpc: this.vpc,
-          subnetGroupName: `${subnetProps.subnetGroupName}Subnet${index}`,
-          routes: subnetProps.routes,
-          peeringConnectionId: this.peeringConnectionIds,
-          subnetType: subnetProps.subnetType,
-          natProvider: natProvider,
-          internetGateway: internetGateway,
-          subnetAvailabilityZone: subnet.availabilityZone,
-        });
-        routeTableManager.associateSubnet(subnet, 0); // Only one subnet per route table
-      });
-    });
-  }
-
-  createSubnet(option: ISubnetsProps, vpc: ec2.Vpc) {
-    const subnets: ec2.Subnet[] = [];
-    const SUBNETTYPE_TAG = 'aws-cdk:subnet-type';
-    const SUBNETNAME_TAG = 'aws-cdk:subnet-name';
-    const NAME_TAG = 'Name';
-    if (option.availabilityZones.length != option.cidrBlock.length) {
-      // eslint-disable-next-line max-len
-      throw new Error(
-        "You cannot reference a Subnet's availability zone if it was not supplied. Add the availabilityZone when importing using option.fromSubnetAttributes()",
-      );
     }
+  }
 
-    option.availabilityZones.forEach((az, index) => {
-      let subnet: ec2.PrivateSubnet | ec2.PublicSubnet =
-        option.subnetType === ec2.SubnetType.PUBLIC
-          ? new ec2.PublicSubnet(
-            this,
-            `${option.subnetGroupName}Subnet${index}`,
-            {
-              availabilityZone: az,
-              cidrBlock: option.cidrBlock[index],
-              vpcId: vpc.vpcId,
-              mapPublicIpOnLaunch: true,
-            },
-          )
-          : new ec2.PrivateSubnet(
-            this,
-            `${option.subnetGroupName}Subnet${index}`,
-            {
-              availabilityZone: az,
-              cidrBlock: option.cidrBlock[index],
-              vpcId: vpc.vpcId,
-              mapPublicIpOnLaunch: false,
-            },
-          );
-      Tags.of(subnet).add(SUBNETNAME_TAG, option.subnetGroupName);
-      Tags.of(subnet).add(SUBNETTYPE_TAG, option.subnetType);
-      if (option.tags != undefined) {
-        const tags: Map<string, string> = ObjToStrMap(option.tags);
-        tags.forEach((v, k) => {
-          Tags.of(subnet).add(k, v);
-        });
+  createSubnet(option: ISubnetsProps, vpc: ec2.Vpc, peeringConnectionId?: PeeringConnectionInternalType, useGlobalNestedStacks?: boolean) {
+    const shouldUseNestedStack = option.useNestedStacks ?? useGlobalNestedStacks ?? false;
+    if (shouldUseNestedStack) {
+      // Create nested stack for this subnet group
+      const subnetStack = new SubnetStack(this, `${option.subnetGroupName}Stack`, {
+        vpc: vpc,
+        subnetGroupName: option.subnetGroupName,
+        subnetType: option.subnetType,
+        cidrBlocks: option.cidrBlock,
+        availabilityZones: option.availabilityZones,
+        ingressNetworkACL: option.ingressNetworkACL,
+        egressNetworkACL: option.egressNetworkACL,
+        routes: option.routes,
+        peeringConnectionId: peeringConnectionId,
+        tags: option.tags,
+        useSubnetForNAT: option.useSubnetForNAT,
+      });
+      // Return the subnets from the nested stack
+      return subnetStack.subnets;
+    } else {
+      const subnets: ec2.Subnet[] = [];
+      const SUBNETTYPE_TAG = 'aws-cdk:subnet-type';
+      const SUBNETNAME_TAG = 'aws-cdk:subnet-name';
+      const NAME_TAG = 'Name';
+      if (option.availabilityZones.length != option.cidrBlock.length) {
+        // eslint-disable-next-line max-len
+        throw new Error(
+          "You cannot reference a Subnet's availability zone if it was not supplied. Add the availabilityZone when importing using option.fromSubnetAttributes()",
+        );
       }
-      subnets.push(subnet);
-    });
 
-    const nacl = new ec2.NetworkAcl(this, `${option.subnetGroupName}NACL`, {
-      vpc: vpc,
-      subnetSelection: {
-        subnets: subnets,
-      },
-    });
-    Tags.of(nacl).add(NAME_TAG, nacl.node.path);
-    option.ingressNetworkACL?.forEach((ingressNACL, index) => {
-      new ec2.NetworkAclEntry(
-        this,
-        `${option.subnetGroupName}IngressNACL-${index}`,
-        {
-          ruleNumber: 100 + index,
-          cidr: ingressNACL.cidr,
-          networkAcl: nacl,
-          traffic: ingressNACL.traffic,
-          direction: ec2.TrafficDirection.INGRESS,
-        },
-      );
-    });
-    option.egressNetworkACL?.forEach((ingressNACL, index) => {
-      new ec2.NetworkAclEntry(
-        this,
-        `${option.subnetGroupName}EgressNACL-${index}`,
-        {
-          ruleNumber: 100 + index,
-          cidr: ingressNACL.cidr,
-          networkAcl: nacl,
-          traffic: ingressNACL.traffic,
-          direction: ec2.TrafficDirection.EGRESS,
-        },
-      );
-    });
+      option.availabilityZones.forEach((az, index) => {
+        let subnet: ec2.PrivateSubnet | ec2.PublicSubnet =
+          option.subnetType === ec2.SubnetType.PUBLIC
+            ? new ec2.PublicSubnet(
+              this,
+              `${option.subnetGroupName}Subnet${index}`,
+              {
+                availabilityZone: az,
+                cidrBlock: option.cidrBlock[index],
+                vpcId: vpc.vpcId,
+                mapPublicIpOnLaunch: true,
 
-    new CfnOutput(this, `${option.subnetGroupName}OutPutSubnets`, {
-      value: subnets
-        .map((subnet) => {
-          return subnet.subnetId;
-        })
-        .join(','),
-      description: `${option.subnetGroupName} subnets cross`,
-    });
-    new CfnOutput(this, `${option.subnetGroupName}OutPutNACL`, {
-      value: nacl.networkAclId,
-      description: `${option.subnetGroupName} subnets associated this nacl`,
-    });
-    return subnets;
+              },
+            )
+            : new ec2.PrivateSubnet(
+              this,
+              `${option.subnetGroupName}Subnet${index}`,
+              {
+                availabilityZone: az,
+                cidrBlock: option.cidrBlock[index],
+                vpcId: vpc.vpcId,
+                mapPublicIpOnLaunch: false,
+              },
+            );
+        option.routes?.forEach((route, routeIndex) => {
+          if (peeringConnectionId != undefined && route.existingVpcPeeringRouteKey != undefined) {
+            let routeId: ec2.CfnVPCPeeringConnection | undefined = peeringConnectionId[route.existingVpcPeeringRouteKey];
+            if (routeId != undefined) {
+              subnet.addRoute(
+                `${option.subnetGroupName}${routeIndex}RouteEntry`,
+                {
+                  routerId: routeId.ref,
+                  routerType: route.routerType,
+                  destinationCidrBlock: route.destinationCidrBlock,
+                },
+              );
+            }
+          } else if (route.routerId != undefined) {
+            subnet.addRoute(
+              `${option.subnetGroupName}${routeIndex}RouteEntry`,
+              {
+                routerId: route.routerId ?? '',
+                routerType: route.routerType,
+                destinationCidrBlock: route.destinationCidrBlock,
+              },
+            );
+          }
+
+        });
+        Tags.of(subnet).add(SUBNETNAME_TAG, option.subnetGroupName);
+        Tags.of(subnet).add(SUBNETTYPE_TAG, option.subnetType);
+        if (option.tags != undefined) {
+          const tags: Map<string, string> = ObjToStrMap(option.tags);
+          tags.forEach((v, k) => {
+            Tags.of(subnet).add(k, v);
+          });
+        }
+        subnets.push(subnet);
+      });
+      const nacl = new ec2.NetworkAcl(this, `${option.subnetGroupName}NACL`, {
+        vpc: vpc,
+        subnetSelection: {
+          subnets: subnets,
+        },
+      });
+      Tags.of(nacl).add(NAME_TAG, nacl.node.path);
+      option.ingressNetworkACL?.forEach((ingressNACL, index) => {
+        new ec2.NetworkAclEntry(
+          this,
+          `${option.subnetGroupName}IngressNACL-${index}`,
+          {
+            ruleNumber: 100 + index,
+            cidr: ingressNACL.cidr,
+            networkAcl: nacl,
+            traffic: ingressNACL.traffic,
+            direction: ec2.TrafficDirection.INGRESS,
+          },
+        );
+      });
+      option.egressNetworkACL?.forEach((ingressNACL, index) => {
+        new ec2.NetworkAclEntry(
+          this,
+          `${option.subnetGroupName}EgressNACL-${index}`,
+          {
+            ruleNumber: 100 + index,
+            cidr: ingressNACL.cidr,
+            networkAcl: nacl,
+            traffic: ingressNACL.traffic,
+            direction: ec2.TrafficDirection.EGRESS,
+          },
+        );
+      });
+
+      new CfnOutput(this, `${option.subnetGroupName}OutPutSubnets`, {
+        value: subnets
+          .map((subnet) => {
+            return subnet.subnetId;
+          })
+          .join(','),
+        description: `${option.subnetGroupName} subnets cross`,
+      });
+      new CfnOutput(this, `${option.subnetGroupName}OutPutNACL`, {
+        value: nacl.networkAclId,
+        description: `${option.subnetGroupName} subnets associated this nacl`,
+      });
+      return subnets;
+    }
   }
 
   // Helper function to add VPC endpoints based on the service and optional subnet and security group configuration
@@ -497,7 +430,7 @@ export class Network extends Construct {
 
 
   // Helper function to merge subnets based on subnet group names
-  private mergeSubnetsByGroupNames(name: string,
+  public mergeSubnetsByGroupNames(name: string,
     service: ec2.InterfaceVpcEndpointAwsService | ec2.GatewayVpcEndpointAwsService
       | ec2.InterfaceVpcEndpointService,
     subnetGroupNames: string[], externalSubnets?: IExternalVPEndpointSubnets[]): ec2.SelectedSubnets {
@@ -553,28 +486,7 @@ export class Network extends Construct {
 
     return sg;
   }
-  // Helper function to create a security group with a list of rules
-  private createOrExistingSGWithRules(type: string, sgId?: string, rules?: SecurityGroupRule[], name?: string): ec2.SecurityGroup {
-    const sg = sgId ? ec2.SecurityGroup.fromSecurityGroupId(
-      this,
-      `${name}${type}ExistingSecurityGroup`,
-      sgId,
-    ) as ec2.SecurityGroup
-      : new ec2.SecurityGroup(this, `${name}-${type}-sg`, {
-        vpc: this.vpc,
-        securityGroupName: `${name}-${type}-sg`,
-        description: `Custom security group for ${name}`,
-        allowAllOutbound: true, // Allow all outbound traffic by default
-      });
-    Tags.of(sg).add('Name', `${name}-${type}-sg`);
-    // If rules are provided, add each rule to the security group
-    if (rules) {
-      for (const rule of rules) {
-        sg.addIngressRule(rule.peer, rule.port, rule.description);
-      }
-    }
-    return sg;
-  }
+
   private applyTagsUsingCustomResource(resourceId: string, resourceType: string, tags: { [key: string]: string }) {
     new AwsCustomResource(this, `AddTagsTo${resourceType}`, {
       onCreate: {
@@ -603,213 +515,6 @@ export class Network extends Construct {
       ]),
     });
   }
-
-  private addVpcEndpointService(vpceServiceConfig: VpcEndpontServiceConfig) {
-    const { alb, name, nlb, allowedPrincipals, acceptanceRequired, additionalTags } = vpceServiceConfig;
-    let ALB: elbv2.ApplicationLoadBalancer;
-    let NLB: elbv2.NetworkLoadBalancer;
-    let vpcEndpointService: ec2.VpcEndpointService;
-    let nlbTargetGroups: elbv2.INetworkTargetGroup[] = [];
-    let albListeners: string[];
-    let albListener: elbv2.IApplicationListener;
-    let albOutputArn: string | undefined;
-    let nlbOutputArn: string | undefined;
-    // eslint-disable-next-line max-len
-    const albVpcSubnets = alb.subnetGroupName ? this.mergeSubnetsByGroupNames(name, ec2.InterfaceVpcEndpointService, [alb.subnetGroupName]) : undefined;
-
-    const nlbSecurityGroup = this.createOrExistingSGWithRules('NLB', nlb.existingSecurityGroupId, nlb.securityGroupRules, name);
-    const albSecurityGroup = this.createOrExistingSGWithRules('ALB', alb.existingSecurityGroupId, alb.securityGroupRules, name);
-    albSecurityGroup.addIngressRule(nlbSecurityGroup, ec2.Port.HTTPS, 'allowNLBTraffic443');
-    albSecurityGroup.addIngressRule(nlbSecurityGroup, ec2.Port.HTTP, 'allowNLBTraffic80');
-    // eslint-disable-next-line max-len
-    const nlbVpcSubnets = nlb.subnetGroupName ? this.mergeSubnetsByGroupNames(name, ec2.InterfaceVpcEndpointService, [nlb.subnetGroupName]) : undefined;
-
-    if (alb.existingArn == undefined) {
-      ALB = new elbv2.ApplicationLoadBalancer(this, `${name}alb`, {
-        vpc: this.vpc,
-        internetFacing: alb?.internetFacing ? alb?.internetFacing : false,
-        vpcSubnets: albVpcSubnets,
-        securityGroup: albSecurityGroup,
-      });
-      const nlbTargetGroup = new elbv2.NetworkTargetGroup(this, `NLBTargetGroup${name}`, {
-        port: 443,
-        vpc: this.vpc,
-        protocol: elbv2.Protocol.TCP,
-        targets: [new targets.AlbArnTarget(ALB.loadBalancerArn, 443)],
-      });
-      nlbTargetGroups.push(nlbTargetGroup);
-      albListener = ALB.addListener(`${name}-443-ALBListener`, {
-        port: 443,
-        certificates: alb.certificates ? alb.certificates.map((certiArn, index) => {
-          return acm.Certificate.fromCertificateArn(this, `${name}-importAlbCert-${index}`, certiArn);
-        }) : undefined,
-        defaultAction: elbv2.ListenerAction.fixedResponse(503, {
-          contentType: 'text/plain',
-          messageBody: 'Service is temporarily unavailable.', // Custom Response Body
-        }),
-      });
-      ALB.addListener(`${name}-HttpListener`, {
-        port: 80,
-        defaultAction: elbv2.ListenerAction.redirect({
-          port: '443',
-          protocol: elbv2.ApplicationProtocol.HTTPS,
-          permanent: true, // HTTP 301 Redirect
-        }),
-      });
-      albOutputArn = ALB.loadBalancerArn;
-    } else {
-      const nlbTargetGroup = new elbv2.NetworkTargetGroup(this, `NLBTargetGroup${name}`, {
-        port: 443,
-        vpc: this.vpc,
-        protocol: elbv2.Protocol.TCP,
-        targets: [new targets.AlbArnTarget(alb.existingArn, 443)],
-      });
-      nlbTargetGroups.push(nlbTargetGroup);
-      albListeners = this.getLoadBalancerListener(alb.existingArn, true, name);
-      albOutputArn = alb.existingArn;
-    }
-    NLB = new elbv2.NetworkLoadBalancer(this, `${name}nlb`, {
-      vpc: this.vpc,
-      vpcSubnets: nlbVpcSubnets,
-      internetFacing: nlb.internetFacing ? nlb.internetFacing : false,
-      securityGroups: [nlbSecurityGroup!],
-    });
-    if (nlb.certificates != undefined) {
-      const certificates: acm.ICertificate[] = nlb.certificates.map((certiArn, index) => {
-        return acm.Certificate.fromCertificateArn(this, `${name}-importNlbCert-${index}`, certiArn);
-      });
-      NLB.addListener(`${name}NLB443Listener`, {
-        port: 443,
-        certificates,
-        protocol: elbv2.Protocol.HTTPS,
-        defaultTargetGroups: nlbTargetGroups,
-      });
-      NLB.addListener(`${name}NLB80Listener`, {
-        port: 80,
-        protocol: elbv2.Protocol.HTTP,
-        defaultTargetGroups: nlbTargetGroups,
-      });
-    } else {
-      NLB.addListener(`${name}NLB443Listener`, {
-        port: 443,
-        protocol: elbv2.Protocol.TCP,
-        defaultTargetGroups: nlbTargetGroups,
-      });
-      NLB.addListener(`${name}NLB80Listener`, {
-        port: 80,
-        protocol: elbv2.Protocol.TCP,
-        defaultTargetGroups: nlbTargetGroups,
-      });
-    }
-    vpcEndpointService = new ec2.VpcEndpointService(this, `${name}EndpointService`, {
-      vpcEndpointServiceLoadBalancers: [NLB],
-      acceptanceRequired: acceptanceRequired,
-      allowedPrincipals: allowedPrincipals?.map((principal) => new iam.ArnPrincipal(principal)),
-      contributorInsights: false,
-    });
-    nlbOutputArn = NLB.loadBalancerArn;
-    this.createVPCEndpointServiceOutputs(vpcEndpointService, name, nlbOutputArn, albOutputArn);
-
-    if (additionalTags) {
-      Tags.of(vpcEndpointService).add('Name', name);
-      Object.entries(additionalTags).forEach(([key, value]) => {
-        Tags.of(vpcEndpointService).add(key, value);
-      });
-    }
-
-    if (alb.targetGroups) {
-      alb.targetGroups.forEach((tgConfig, index) => {
-        const albTargetGroup = new elbv2.ApplicationTargetGroup(this, `${name}-AlbTargetGroup-${index}`, {
-          vpc: this.vpc,
-          protocolVersion: tgConfig.protocolVersion ? tgConfig.protocolVersion : elbv2.ApplicationProtocolVersion.HTTP1,
-          protocol: tgConfig.protocol ? tgConfig.protocol : elbv2.ApplicationProtocol.HTTP,
-          targetType: elbv2.TargetType.IP,
-          port: tgConfig.applicationPort,
-          healthCheck: {
-            path: tgConfig.healthCheckPath,
-            protocol: tgConfig.healthCheckProtocol ? tgConfig.healthCheckProtocol : elbv2.Protocol.HTTP,
-            port: tgConfig.healthCheckPort ? `${tgConfig.healthCheckPort}` : `${tgConfig.applicationPort}`,
-          },
-        });
-        if (alb.existingArn) {
-          new elbv2.CfnListenerRule(this, `${name}-http-rule-${index}`, {
-            listenerArn: albListeners[0],
-            actions: [
-              {
-                type: 'forward',
-                targetGroupArn: albTargetGroup.targetGroupArn,
-              },
-            ],
-            conditions: [
-              {
-                field: 'host-header',
-                hostHeaderConfig: {
-                  values: [tgConfig.host],
-                },
-              },
-            ],
-            priority: tgConfig.priority ? tgConfig.priority : (index + 1),
-          });
-        } else {
-          if ( albListener != undefined ) {
-            albListener.addAction(`${name}-albAction-${index}`, {
-              conditions: [
-                elbv2.ListenerCondition.hostHeaders([tgConfig.host]),
-              ],
-              action: elbv2.ListenerAction.forward([albTargetGroup]),
-              priority: tgConfig.priority ? tgConfig.priority : (index + 1),
-            });
-          }
-        }
-      });
-    }
-
-  }
-  private createVPCEndpointServiceOutputs(
-    vpcEndpointService: ec2.VpcEndpointService,
-
-    name: string,
-    nlb?: string,
-    alb?: string,
-  ) {
-    new CfnOutput(this, `${name}VpcEndpointServiceName`, {
-      value: vpcEndpointService.vpcEndpointServiceName,
-      description: 'The name of the VPC Endpoint Service.',
-    });
-    if (alb != undefined) {
-      new CfnOutput(this, `${name}AlbArn`, {
-        value: alb,
-        description: 'The ALB ARN of the Application Load Balancer.',
-      });
-    }
-
-    if (nlb != undefined) {
-      new CfnOutput(this, `${name}NlbArn`, {
-        value: nlb,
-        description: 'The NLB ARN of the Network Load Balancer.',
-      });
-    }
-  }
-
-  private getLoadBalancerListener(loadBalancerArn: string, sslEnabled: boolean, name: string) {
-    const listeners = [];
-
-    if (!sslEnabled) {
-      listeners.push(elbv2.ApplicationListener.fromLookup(this, name + '-listener-http', {
-        loadBalancerArn: loadBalancerArn,
-        listenerProtocol: elbv2.ApplicationProtocol.HTTP,
-      }).listenerArn);
-    }
-
-    if (sslEnabled) {
-      listeners.push(elbv2.ApplicationListener.fromLookup(this, name + '-listener-https', {
-        loadBalancerArn: loadBalancerArn,
-        listenerProtocol: elbv2.ApplicationProtocol.HTTPS,
-      }).listenerArn);
-    }
-    return listeners;
-  }
-
 }
 
 

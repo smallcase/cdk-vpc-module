@@ -145,7 +145,7 @@ export class Network extends Construct {
       'InternetGateway',
       {},
     );
-    new ec2.CfnVPCGatewayAttachment(this, 'VPCGatewayAttachement', {
+    const att = new ec2.CfnVPCGatewayAttachment(this, 'VPCGatewayAttachement', {
       internetGatewayId: internetGateway.ref,
       vpcId: this.vpc.vpcId,
     });
@@ -213,9 +213,9 @@ export class Network extends Construct {
       });
     }
 
-    // this.pbSubnets.forEach((pb) => {
-    //   pb.addDefaultInternetRoute(internetGateway.ref, att);
-    // });
+    this.pbSubnets.forEach((pb) => {
+      pb.addDefaultInternetRoute(internetGateway.ref, att);
+    });
 
     new CfnOutput(this, 'VpcId', { value: this.vpc.vpcId });
     // Add VPC endpoints if specified in the props

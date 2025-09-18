@@ -7,6 +7,9 @@ cdk-vpc-module construct library is an open-source extension of the AWS Cloud De
 - :white_check_mark: VPC Peering with  route table entry
 - :white_check_mark: Configurable NACL as per subnet group
 - :white_check_mark: NATGateway as per availabilityZones
+- :white_check_mark: VPC Endpoint Services with ALB/NLB setup
+- :white_check_mark: SSL/TLS termination support
+- :white_check_mark: Multiple target group routing
 
 
 Using cdk a vpc can be deployed using the following sample code snippet:
@@ -143,6 +146,7 @@ export class VPCStack extends Stack {
           },
         },
       ],
+      
       vpcEndpoints: [
         {
           name: "s3-gw",
@@ -286,10 +290,47 @@ A custom IAM policy (s3EndpointIamPermission) is attached to control access to t
 A DynamoDB Gateway Endpoint is created in the private-subnet with additional tags specifying the environment and ownership.
 
 Configuration Options
-Here’s a breakdown of the configuration options available:
+Here's a breakdown of the configuration options available:
 1. name: A unique name for the VPC Endpoint.
 2. service: The AWS service the VPC Endpoint connects to (e.g., S3, DynamoDB, Secrets Manager)
 3. subnetGroupNames: The subnet group names where the VPC Endpoint will be deployed.
 4. externalSubnets: Specify external subnets if you need to define subnets manually (each with an id, availabilityZone, and routeTableId).
 5. iamPolicyStatements: (Optional) Attach IAM policy statements to control access to the endpoint.
 6. additionalTags: (Optional) Add custom tags to the VPC Endpoint for easier identification and tracking.
+
+## VPC Endpoint Services
+
+For comprehensive documentation on VPC Endpoint Services, including detailed configuration options, examples, and best practices, see [VPC_ENDPOINT_SERVICES.md](./VPC_ENDPOINT_SERVICES.md).
+
+VPC Endpoint Services allow you to expose your services privately within a VPC using a combination of Network Load Balancer (NLB) and Application Load Balancer (ALB) for robust, scalable private service exposure.
+
+### Quick Example
+
+```typescript
+vpcEndpointServices: [
+  {
+    name: 'my-private-service',
+    alb: {
+      subnetGroupName: 'Private',
+      targetGroups: [
+        {
+          host: 'api.example.com',
+          applicationPort: 8080,
+          healthCheckPath: '/health'
+        }
+      ]
+    },
+    nlb: {
+      subnetGroupName: 'Private',
+      securityGroupRules: [
+        {
+          peer: ec2.Peer.anyIpv4(),
+          port: ec2.Port.tcp(443),
+          description: 'Allow HTTPS traffic'
+        }
+      ]
+    },
+    acceptanceRequired: false
+  }
+]
+```

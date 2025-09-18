@@ -231,19 +231,19 @@ export class Network extends Construct {
       // Return the subnets from the nested stack
       return subnetStack.subnets;
     } else {
-    const subnets: ec2.Subnet[] = [];
-    const SUBNETTYPE_TAG = 'aws-cdk:subnet-type';
-    const SUBNETNAME_TAG = 'aws-cdk:subnet-name';
-    const NAME_TAG = 'Name';
-    if (option.availabilityZones.length != option.cidrBlock.length) {
+      const subnets: ec2.Subnet[] = [];
+      const SUBNETTYPE_TAG = 'aws-cdk:subnet-type';
+      const SUBNETNAME_TAG = 'aws-cdk:subnet-name';
+      const NAME_TAG = 'Name';
+      if (option.availabilityZones.length != option.cidrBlock.length) {
       // eslint-disable-next-line max-len
-      throw new Error(
-        "You cannot reference a Subnet's availability zone if it was not supplied. Add the availabilityZone when importing using option.fromSubnetAttributes()",
-      );
-    }
+        throw new Error(
+          "You cannot reference a Subnet's availability zone if it was not supplied. Add the availabilityZone when importing using option.fromSubnetAttributes()",
+        );
+      }
 
-    option.availabilityZones.forEach((az, index) => {
-      let subnet: ec2.PrivateSubnet | ec2.PublicSubnet =
+      option.availabilityZones.forEach((az, index) => {
+        let subnet: ec2.PrivateSubnet | ec2.PublicSubnet =
         option.subnetType === ec2.SubnetType.PUBLIC
           ? new ec2.PublicSubnet(
             this,
@@ -266,89 +266,89 @@ export class Network extends Construct {
               mapPublicIpOnLaunch: false,
             },
           );
-      option.routes?.forEach((route, routeIndex) => {
-        if (peeringConnectionId != undefined && route.existingVpcPeeringRouteKey != undefined) {
-          let routeId: ec2.CfnVPCPeeringConnection | undefined = peeringConnectionId[route.existingVpcPeeringRouteKey];
-          if (routeId != undefined) {
+        option.routes?.forEach((route, routeIndex) => {
+          if (peeringConnectionId != undefined && route.existingVpcPeeringRouteKey != undefined) {
+            let routeId: ec2.CfnVPCPeeringConnection | undefined = peeringConnectionId[route.existingVpcPeeringRouteKey];
+            if (routeId != undefined) {
+              subnet.addRoute(
+                `${option.subnetGroupName}${routeIndex}RouteEntry`,
+                {
+                  routerId: routeId.ref,
+                  routerType: route.routerType,
+                  destinationCidrBlock: route.destinationCidrBlock,
+                },
+              );
+            }
+          } else if (route.routerId != undefined) {
             subnet.addRoute(
               `${option.subnetGroupName}${routeIndex}RouteEntry`,
               {
-                routerId: routeId.ref,
+                routerId: route.routerId ?? '',
                 routerType: route.routerType,
                 destinationCidrBlock: route.destinationCidrBlock,
               },
             );
           }
-        } else if (route.routerId != undefined) {
-          subnet.addRoute(
-            `${option.subnetGroupName}${routeIndex}RouteEntry`,
-            {
-              routerId: route.routerId ?? '',
-              routerType: route.routerType,
-              destinationCidrBlock: route.destinationCidrBlock,
-            },
-          );
-        }
 
-      });
-      Tags.of(subnet).add(SUBNETNAME_TAG, option.subnetGroupName);
-      Tags.of(subnet).add(SUBNETTYPE_TAG, option.subnetType);
-      if (option.tags != undefined) {
-        const tags: Map<string, string> = ObjToStrMap(option.tags);
-        tags.forEach((v, k) => {
-          Tags.of(subnet).add(k, v);
         });
-      }
-      subnets.push(subnet);
-    });
-    const nacl = new ec2.NetworkAcl(this, `${option.subnetGroupName}NACL`, {
-      vpc: vpc,
-      subnetSelection: {
-        subnets: subnets,
-      },
-    });
-    Tags.of(nacl).add(NAME_TAG, nacl.node.path);
-    option.ingressNetworkACL?.forEach((ingressNACL, index) => {
-      new ec2.NetworkAclEntry(
-        this,
-        `${option.subnetGroupName}IngressNACL-${index}`,
-        {
-          ruleNumber: 100 + index,
-          cidr: ingressNACL.cidr,
-          networkAcl: nacl,
-          traffic: ingressNACL.traffic,
-          direction: ec2.TrafficDirection.INGRESS,
+        Tags.of(subnet).add(SUBNETNAME_TAG, option.subnetGroupName);
+        Tags.of(subnet).add(SUBNETTYPE_TAG, option.subnetType);
+        if (option.tags != undefined) {
+          const tags: Map<string, string> = ObjToStrMap(option.tags);
+          tags.forEach((v, k) => {
+            Tags.of(subnet).add(k, v);
+          });
+        }
+        subnets.push(subnet);
+      });
+      const nacl = new ec2.NetworkAcl(this, `${option.subnetGroupName}NACL`, {
+        vpc: vpc,
+        subnetSelection: {
+          subnets: subnets,
         },
-      );
-    });
-    option.egressNetworkACL?.forEach((ingressNACL, index) => {
-      new ec2.NetworkAclEntry(
-        this,
-        `${option.subnetGroupName}EgressNACL-${index}`,
-        {
-          ruleNumber: 100 + index,
-          cidr: ingressNACL.cidr,
-          networkAcl: nacl,
-          traffic: ingressNACL.traffic,
-          direction: ec2.TrafficDirection.EGRESS,
-        },
-      );
-    });
+      });
+      Tags.of(nacl).add(NAME_TAG, nacl.node.path);
+      option.ingressNetworkACL?.forEach((ingressNACL, index) => {
+        new ec2.NetworkAclEntry(
+          this,
+          `${option.subnetGroupName}IngressNACL-${index}`,
+          {
+            ruleNumber: 100 + index,
+            cidr: ingressNACL.cidr,
+            networkAcl: nacl,
+            traffic: ingressNACL.traffic,
+            direction: ec2.TrafficDirection.INGRESS,
+          },
+        );
+      });
+      option.egressNetworkACL?.forEach((ingressNACL, index) => {
+        new ec2.NetworkAclEntry(
+          this,
+          `${option.subnetGroupName}EgressNACL-${index}`,
+          {
+            ruleNumber: 100 + index,
+            cidr: ingressNACL.cidr,
+            networkAcl: nacl,
+            traffic: ingressNACL.traffic,
+            direction: ec2.TrafficDirection.EGRESS,
+          },
+        );
+      });
 
-    new CfnOutput(this, `${option.subnetGroupName}OutPutSubnets`, {
-      value: subnets
-        .map((subnet) => {
-          return subnet.subnetId;
-        })
-        .join(','),
-      description: `${option.subnetGroupName} subnets cross`,
-    });
-    new CfnOutput(this, `${option.subnetGroupName}OutPutNACL`, {
-      value: nacl.networkAclId,
-      description: `${option.subnetGroupName} subnets associated this nacl`,
-    });
-    return subnets;
-  }
+      new CfnOutput(this, `${option.subnetGroupName}OutPutSubnets`, {
+        value: subnets
+          .map((subnet) => {
+            return subnet.subnetId;
+          })
+          .join(','),
+        description: `${option.subnetGroupName} subnets cross`,
+      });
+      new CfnOutput(this, `${option.subnetGroupName}OutPutNACL`, {
+        value: nacl.networkAclId,
+        description: `${option.subnetGroupName} subnets associated this nacl`,
+      });
+      return subnets;
+    }
   }
 
   // Helper function to add VPC endpoints based on the service and optional subnet and security group configuration

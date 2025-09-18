@@ -1,6 +1,6 @@
 const { AwsCdkConstructLibrary } = require('projen/lib/awscdk');
 const { NpmAccess } = require('projen/lib/javascript');
-const CDK_VERSION = '2.195.0';
+const CDK_VERSION = '2.207.0';
 const project = new AwsCdkConstructLibrary({
   author: 'Bharat Parmar',
   authorAddress: 'bharat.parmar@smallcase.com',
@@ -33,14 +33,7 @@ const project = new AwsCdkConstructLibrary({
   },
   releaseEveryCommit: true,
   licensed: true, /* Indicates if a license should be added. */
-  dependabot: true,
-  depsUpgrade: false,
-  dependabotOptions: {
-    scheduleInterval: 'weekly',
-    versioningStrategy: 'lockfile-only',
-    allow: ['npm', 'github-actions'],
-    labels: ['dependencies', 'automerge'],
-  },
+  dependabot: false, /* Include dependabot configuration. */
   mergify: false, /* Adds mergify configuration. */
   pullRequestTemplate: true, /* Include a GitHub pull request template. */
   // deps: [],                /* Runtime dependencies of this module. */

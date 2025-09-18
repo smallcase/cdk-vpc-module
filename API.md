@@ -44,7 +44,6 @@ new Network(scope: Construct, id: string, props: VPCProps)
 | --- | --- |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.toString">toString</a></code> | Returns a string representation of this construct. |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.createSubnet">createSubnet</a></code> | *No description.* |
-| <code><a href="#@smallcase/cdk-vpc-module.Network.mergeSubnetsByGroupNames">mergeSubnetsByGroupNames</a></code> | *No description.* |
 
 ---
 
@@ -86,36 +85,6 @@ public createSubnet(option: ISubnetsProps, vpc: Vpc, peeringConnectionId?: Peeri
 
 ---
 
-##### `mergeSubnetsByGroupNames` <a name="mergeSubnetsByGroupNames" id="@smallcase/cdk-vpc-module.Network.mergeSubnetsByGroupNames"></a>
-
-```typescript
-public mergeSubnetsByGroupNames(name: string, service: InterfaceVpcEndpointAwsService | GatewayVpcEndpointAwsService | InterfaceVpcEndpointService, subnetGroupNames: string[], externalSubnets?: IExternalVPEndpointSubnets[]): SelectedSubnets
-```
-
-###### `name`<sup>Required</sup> <a name="name" id="@smallcase/cdk-vpc-module.Network.mergeSubnetsByGroupNames.parameter.name"></a>
-
-- *Type:* string
-
----
-
-###### `service`<sup>Required</sup> <a name="service" id="@smallcase/cdk-vpc-module.Network.mergeSubnetsByGroupNames.parameter.service"></a>
-
-- *Type:* aws-cdk-lib.aws_ec2.InterfaceVpcEndpointAwsService | aws-cdk-lib.aws_ec2.GatewayVpcEndpointAwsService | aws-cdk-lib.aws_ec2.InterfaceVpcEndpointService
-
----
-
-###### `subnetGroupNames`<sup>Required</sup> <a name="subnetGroupNames" id="@smallcase/cdk-vpc-module.Network.mergeSubnetsByGroupNames.parameter.subnetGroupNames"></a>
-
-- *Type:* string[]
-
----
-
-###### `externalSubnets`<sup>Optional</sup> <a name="externalSubnets" id="@smallcase/cdk-vpc-module.Network.mergeSubnetsByGroupNames.parameter.externalSubnets"></a>
-
-- *Type:* <a href="#@smallcase/cdk-vpc-module.IExternalVPEndpointSubnets">IExternalVPEndpointSubnets</a>[]
-
----
-
 #### Static Functions <a name="Static Functions" id="Static Functions"></a>
 
 | **Name** | **Description** |
@@ -148,6 +117,7 @@ Any object.
 | --- | --- | --- |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.node">node</a></code> | <code>constructs.Node</code> | The tree node. |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.endpointOutputs">endpointOutputs</a></code> | <code>{[ key: string ]: aws-cdk-lib.aws_ec2.GatewayVpcEndpoint \| aws-cdk-lib.aws_ec2.InterfaceVpcEndpoint}</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.Network.property.natProvider">natProvider</a></code> | <code>aws-cdk-lib.aws_ec2.NatProvider</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.securityGroupOutputs">securityGroupOutputs</a></code> | <code>{[ key: string ]: aws-cdk-lib.aws_ec2.SecurityGroup}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.vpc">vpc</a></code> | <code>aws-cdk-lib.aws_ec2.Vpc</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.natSubnets">natSubnets</a></code> | <code>aws-cdk-lib.aws_ec2.PublicSubnet[]</code> | *No description.* |
@@ -176,6 +146,16 @@ public readonly endpointOutputs: {[ key: string ]: GatewayVpcEndpoint | Interfac
 ```
 
 - *Type:* {[ key: string ]: aws-cdk-lib.aws_ec2.GatewayVpcEndpoint | aws-cdk-lib.aws_ec2.InterfaceVpcEndpoint}
+
+---
+
+##### `natProvider`<sup>Required</sup> <a name="natProvider" id="@smallcase/cdk-vpc-module.Network.property.natProvider"></a>
+
+```typescript
+public readonly natProvider: NatProvider;
+```
+
+- *Type:* aws-cdk-lib.aws_ec2.NatProvider
 
 ---
 
@@ -859,9 +839,9 @@ attempt to parse it to implement your logic. If you do, you must first
 check that it is a concrete value an not an unresolved token. If this
 value is an unresolved token (`Token.isUnresolved(stack.account)` returns
 `true`), this implies that the user wishes that this stack will synthesize
-into an **account-agnostic template**. In this case, your code should either
+into a **account-agnostic template**. In this case, your code should either
 fail (throw an error, emit a synth error using `Annotations.of(construct).addError()`) or
-implement some other account-agnostic behavior.
+implement some other region-agnostic behavior.
 
 ---
 

@@ -118,10 +118,10 @@ export class Network extends Construct {
   public readonly securityGroupOutputs: { [key: string]: ec2.SecurityGroup } = {}; // Store Security Group outputs
   public readonly endpointOutputs: { [key: string]: ec2.InterfaceVpcEndpoint | ec2.GatewayVpcEndpoint } = {}; // Store Endpoint outputs
   private peeringConnectionIds: PeeringConnectionInternalType = {};
+  public readonly natProvider!: ec2.NatProvider;
   constructor(scope: Construct, id: string, props: VPCProps) {
     super(scope, id);
     this.vpc = new ec2.Vpc(this, 'VPC', props.vpc);
-
     if (props.peeringConfigs) {
       const convertPeeringConfig: Map<string, PeeringConfig> = ObjToStrMap(props.peeringConfigs);
       convertPeeringConfig.forEach((createVpcPeering, key) => {
@@ -139,27 +139,8 @@ export class Network extends Construct {
         this.peeringConnectionIds[key] = peeringConnectionIdByKey;
       });
     }
-
-    const internetGateway = new ec2.CfnInternetGateway(
-      this,
-      'InternetGateway',
-      {},
-    );
-    const att = new ec2.CfnVPCGatewayAttachment(this, 'VPCGatewayAttachement', {
-      internetGatewayId: internetGateway.ref,
-      vpcId: this.vpc.vpcId,
-    });
-
-    // Initialize NAT provider with EIP allocation IDs if provided
-    const natProvider = props.natEipAllocationIds && props.natEipAllocationIds.length > 0
-      ? ec2.NatProvider.gateway({
-        eipAllocationIds: props.natEipAllocationIds,
-      }) : ec2.NatProvider.gateway();
-
-
-    // First pass: collect all subnets
     props.subnets.forEach((subnetProps) => {
-      let subnet = this.createSubnet(subnetProps, this.vpc, this.peeringConnectionIds, props.useNestedStacks);
+      let subnet = this.createSubnet(subnetProps, this.vpc, this.peeringConnectionIds);
       this.subnets[subnetProps.subnetGroupName] = subnet;
       subnet.forEach((sb) => {
         if (sb instanceof ec2.PublicSubnet) {
@@ -180,43 +161,40 @@ export class Network extends Construct {
         }
       });
     });
-
-    // Configure NAT after collecting all subnets
+    const internetGateway = new ec2.CfnInternetGateway(
+      this,
+      'InternetGateway',
+      {},
+    );
+    const att = new ec2.CfnVPCGatewayAttachment(this, 'VPCGatewayAttachement', {
+      internetGatewayId: internetGateway.ref,
+      vpcId: this.vpc.vpcId,
+    });
+    this.pbSubnets.forEach((pb) => {
+      pb.addDefaultInternetRoute(internetGateway.ref, att);
+    });
     if (this.natSubnets.length > 0) {
-      natProvider.configureNat({
+      if (props.natEipAllocationIds && this.natSubnets.length != props.natEipAllocationIds?.length) {
+        // eslint-disable-next-line max-len
+        throw new Error(
+          'natEipAllocationIds and natSubnets length should be  equal',
+        );
+      }
+
+      if (props.natEipAllocationIds?.length == this.natSubnets?.length) {
+        this.natProvider = ec2.NatProvider.gateway({
+          eipAllocationIds: props.natEipAllocationIds,
+        });
+      } else {
+        this.natProvider = ec2.NatProvider.gateway();
+      }
+
+      this.natProvider.configureNat({
         vpc: this.vpc,
         natSubnets: this.natSubnets,
         privateSubnets: this.pvSubnets,
       });
     }
-
-    // Determine routing strategy based on number of NAT Gateways
-    const natGatewayCount = this.natSubnets.length;
-    const useSingleRouteTable = natGatewayCount <= 1;
-
-    // Add output to show which strategy is being used
-    new CfnOutput(this, 'RoutingStrategy', {
-      value: useSingleRouteTable ? 'Route Table per Subnet Group' : 'Route Table per Subnet',
-      description: 'Routing strategy based on NAT Gateway count',
-    });
-
-    new CfnOutput(this, 'NATGatewayCount', {
-      value: natGatewayCount.toString(),
-      description: 'Number of NAT Gateways configured',
-    });
-
-    // Add output for EIP allocation IDs if provided
-    if (props.natEipAllocationIds && props.natEipAllocationIds.length > 0) {
-      new CfnOutput(this, 'NATEipAllocationIds', {
-        value: props.natEipAllocationIds.join(','),
-        description: 'EIP allocation IDs used for NAT Gateways',
-      });
-    }
-
-    this.pbSubnets.forEach((pb) => {
-      pb.addDefaultInternetRoute(internetGateway.ref, att);
-    });
-
     new CfnOutput(this, 'VpcId', { value: this.vpc.vpcId });
     // Add VPC endpoints if specified in the props
     if (props?.vpcEndpoints) {
@@ -258,7 +236,7 @@ export class Network extends Construct {
       const SUBNETNAME_TAG = 'aws-cdk:subnet-name';
       const NAME_TAG = 'Name';
       if (option.availabilityZones.length != option.cidrBlock.length) {
-        // eslint-disable-next-line max-len
+      // eslint-disable-next-line max-len
         throw new Error(
           "You cannot reference a Subnet's availability zone if it was not supplied. Add the availabilityZone when importing using option.fromSubnetAttributes()",
         );
@@ -266,28 +244,28 @@ export class Network extends Construct {
 
       option.availabilityZones.forEach((az, index) => {
         let subnet: ec2.PrivateSubnet | ec2.PublicSubnet =
-          option.subnetType === ec2.SubnetType.PUBLIC
-            ? new ec2.PublicSubnet(
-              this,
-              `${option.subnetGroupName}Subnet${index}`,
-              {
-                availabilityZone: az,
-                cidrBlock: option.cidrBlock[index],
-                vpcId: vpc.vpcId,
-                mapPublicIpOnLaunch: true,
+        option.subnetType === ec2.SubnetType.PUBLIC
+          ? new ec2.PublicSubnet(
+            this,
+            `${option.subnetGroupName}Subnet${index}`,
+            {
+              availabilityZone: az,
+              cidrBlock: option.cidrBlock[index],
+              vpcId: vpc.vpcId,
+              mapPublicIpOnLaunch: true,
 
-              },
-            )
-            : new ec2.PrivateSubnet(
-              this,
-              `${option.subnetGroupName}Subnet${index}`,
-              {
-                availabilityZone: az,
-                cidrBlock: option.cidrBlock[index],
-                vpcId: vpc.vpcId,
-                mapPublicIpOnLaunch: false,
-              },
-            );
+            },
+          )
+          : new ec2.PrivateSubnet(
+            this,
+            `${option.subnetGroupName}Subnet${index}`,
+            {
+              availabilityZone: az,
+              cidrBlock: option.cidrBlock[index],
+              vpcId: vpc.vpcId,
+              mapPublicIpOnLaunch: false,
+            },
+          );
         option.routes?.forEach((route, routeIndex) => {
           if (peeringConnectionId != undefined && route.existingVpcPeeringRouteKey != undefined) {
             let routeId: ec2.CfnVPCPeeringConnection | undefined = peeringConnectionId[route.existingVpcPeeringRouteKey];
@@ -430,10 +408,10 @@ export class Network extends Construct {
 
 
   // Helper function to merge subnets based on subnet group names
-  public mergeSubnetsByGroupNames(name: string,
+  private mergeSubnetsByGroupNames(name: string,
     service: ec2.InterfaceVpcEndpointAwsService | ec2.GatewayVpcEndpointAwsService
-      | ec2.InterfaceVpcEndpointService,
-    subnetGroupNames: string[], externalSubnets?: IExternalVPEndpointSubnets[]): ec2.SelectedSubnets {
+    | ec2.InterfaceVpcEndpointService,
+    subnetGroupNames: string[], externalSubnets?: IExternalVPEndpointSubnets[] ): ec2.SelectedSubnets {
     // Check if subnetGroupNames is required and not empty for Interface VPC Endpoints
     if ((service instanceof ec2.InterfaceVpcEndpointAwsService || service instanceof ec2.InterfaceVpcEndpointService) &&
       (!subnetGroupNames || subnetGroupNames.length === 0)) {
@@ -486,7 +464,6 @@ export class Network extends Construct {
 
     return sg;
   }
-
   private applyTagsUsingCustomResource(resourceId: string, resourceType: string, tags: { [key: string]: string }) {
     new AwsCustomResource(this, `AddTagsTo${resourceType}`, {
       onCreate: {

@@ -1,7 +1,10 @@
 import { aws_ec2 as ec2, CfnOutput, Tags, aws_iam as iam, Stack } from 'aws-cdk-lib';
 import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
+import { SubnetStack } from './subnet-stack';
+import { VpcEndpointServiceNestedStack, VpcEndpontServiceConfig } from './vpc-endpoint-service';
 import { ObjToStrMap } from '../utils/common';
+
 export interface NetworkACL {
   readonly cidr: ec2.AclCidr;
   readonly traffic: ec2.AclTraffic;
@@ -47,6 +50,7 @@ export interface AddRouteOptions {
     * @stability stable
     */
   readonly enablesInternetConnectivity?: boolean;
+  readonly routeName?: string;
 }
 export interface ISubnetsProps {
   readonly subnetGroupName: string;
@@ -58,6 +62,7 @@ export interface ISubnetsProps {
   readonly routes?: AddRouteOptions[];
   readonly tags?: Record<string, string>;
   readonly useSubnetForNAT?: boolean;
+  readonly useNestedStacks?: boolean;
 }
 export interface VPCProps {
   readonly vpc: ec2.VpcProps;
@@ -65,6 +70,8 @@ export interface VPCProps {
   readonly vpcEndpoints?: VpcEndpointConfig[]; // List of VPC endpoints to configure
   readonly natEipAllocationIds?: string[];
   readonly subnets: ISubnetsProps[];
+  readonly vpcEndpointServices?: VpcEndpontServiceConfig[]; // List of VPC endpoint Service to configure
+  readonly useNestedStacks?: boolean;
 }
 
 export interface PeeringConfig {
@@ -77,9 +84,9 @@ export interface PeeringConfig {
 
 
 export interface PeeringConnectionInternalType {
-/**
-* @jsii ignore
-*/
+  /**
+  * @jsii ignore
+  */
   [name: string]: ec2.CfnVPCPeeringConnection;
 }
 export interface SecurityGroupRule {
@@ -195,9 +202,35 @@ export class Network extends Construct {
         this.addVpcEndpoint(endpointConfig);
       }
     }
+    if (props?.vpcEndpointServices) {
+      new VpcEndpointServiceNestedStack(this, 'VpcEndpointServices', {
+        vpc: this.vpc,
+        vpcEndpointServiceConfigs: props.vpcEndpointServices,
+        subnets: this.subnets,
+      });
+    }
   }
 
-  createSubnet(option: ISubnetsProps, vpc: ec2.Vpc, peeringConnectionId?: PeeringConnectionInternalType) {
+  createSubnet(option: ISubnetsProps, vpc: ec2.Vpc, peeringConnectionId?: PeeringConnectionInternalType, useGlobalNestedStacks?: boolean) {
+    const shouldUseNestedStack = option.useNestedStacks ?? useGlobalNestedStacks ?? false;
+    if (shouldUseNestedStack) {
+      // Create nested stack for this subnet group
+      const subnetStack = new SubnetStack(this, `${option.subnetGroupName}Stack`, {
+        vpc: vpc,
+        subnetGroupName: option.subnetGroupName,
+        subnetType: option.subnetType,
+        cidrBlocks: option.cidrBlock,
+        availabilityZones: option.availabilityZones,
+        ingressNetworkACL: option.ingressNetworkACL,
+        egressNetworkACL: option.egressNetworkACL,
+        routes: option.routes,
+        peeringConnectionId: peeringConnectionId,
+        tags: option.tags,
+        useSubnetForNAT: option.useSubnetForNAT,
+      });
+      // Return the subnets from the nested stack
+      return subnetStack.subnets;
+    } else {
     const subnets: ec2.Subnet[] = [];
     const SUBNETTYPE_TAG = 'aws-cdk:subnet-type';
     const SUBNETNAME_TAG = 'aws-cdk:subnet-name';
@@ -315,6 +348,7 @@ export class Network extends Construct {
       description: `${option.subnetGroupName} subnets associated this nacl`,
     });
     return subnets;
+  }
   }
 
   // Helper function to add VPC endpoints based on the service and optional subnet and security group configuration

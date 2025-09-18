@@ -263,12 +263,14 @@ new VpcEndpointServiceNestedStack(scope: Construct, id: string, props: VpcEndpoi
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.toString">toString</a></code> | Returns a string representation of this construct. |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.addDependency">addDependency</a></code> | Add a dependency between this stack and another stack. |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.addMetadata">addMetadata</a></code> | Adds an arbitrary key-value pair, with information you want to record about the stack. |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.addStackTag">addStackTag</a></code> | Configure a stack tag. |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.addTransform">addTransform</a></code> | Add a Transform to this stack. A Transform is a macro that AWS CloudFormation uses to process your template. |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.exportStringListValue">exportStringListValue</a></code> | Create a CloudFormation Export for a string list value. |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.exportValue">exportValue</a></code> | Create a CloudFormation Export for a string value. |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.formatArn">formatArn</a></code> | Creates an ARN from components. |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.getLogicalId">getLogicalId</a></code> | Allocates a stack-unique CloudFormation-compatible logical identity for a specific resource. |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.regionalFact">regionalFact</a></code> | Look up a fact value for the given fact for the region of this stack. |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.removeStackTag">removeStackTag</a></code> | Remove a stack tag. |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.renameLogicalId">renameLogicalId</a></code> | Rename a generated logical identities. |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.reportMissingContextKey">reportMissingContextKey</a></code> | Indicate that a context key was expected. |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.resolve">resolve</a></code> | Resolve a tokenized value in the context of the current stack. |
@@ -331,6 +333,28 @@ These get translated to the Metadata section of the generated template.
 ###### `value`<sup>Required</sup> <a name="value" id="@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.addMetadata.parameter.value"></a>
 
 - *Type:* any
+
+---
+
+##### `addStackTag` <a name="addStackTag" id="@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.addStackTag"></a>
+
+```typescript
+public addStackTag(tagName: string, tagValue: string): void
+```
+
+Configure a stack tag.
+
+At deploy time, CloudFormation will automatically apply all stack tags to all resources in the stack.
+
+###### `tagName`<sup>Required</sup> <a name="tagName" id="@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.addStackTag.parameter.tagName"></a>
+
+- *Type:* string
+
+---
+
+###### `tagValue`<sup>Required</sup> <a name="tagValue" id="@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.addStackTag.parameter.tagValue"></a>
+
+- *Type:* string
 
 ---
 
@@ -545,6 +569,22 @@ the given region.
 ---
 
 ###### `defaultValue`<sup>Optional</sup> <a name="defaultValue" id="@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.regionalFact.parameter.defaultValue"></a>
+
+- *Type:* string
+
+---
+
+##### `removeStackTag` <a name="removeStackTag" id="@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.removeStackTag"></a>
+
+```typescript
+public removeStackTag(tagName: string): void
+```
+
+Remove a stack tag.
+
+At deploy time, CloudFormation will automatically apply all stack tags to all resources in the stack.
+
+###### `tagName`<sup>Required</sup> <a name="tagName" id="@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.removeStackTag.parameter.tagName"></a>
 
 - *Type:* string
 
@@ -839,9 +879,9 @@ attempt to parse it to implement your logic. If you do, you must first
 check that it is a concrete value an not an unresolved token. If this
 value is an unresolved token (`Token.isUnresolved(stack.account)` returns
 `true`), this implies that the user wishes that this stack will synthesize
-into a **account-agnostic template**. In this case, your code should either
+into an **account-agnostic template**. In this case, your code should either
 fail (throw an error, emit a synth error using `Annotations.of(construct).addError()`) or
-implement some other region-agnostic behavior.
+implement some other account-agnostic behavior.
 
 ---
 

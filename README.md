@@ -293,3 +293,7 @@ Here’s a breakdown of the configuration options available:
 4. externalSubnets: Specify external subnets if you need to define subnets manually (each with an id, availabilityZone, and routeTableId).
 5. iamPolicyStatements: (Optional) Attach IAM policy statements to control access to the endpoint.
 6. additionalTags: (Optional) Add custom tags to the VPC Endpoint for easier identification and tracking.
+
+
+
+- :white_check_mark: Configurable route table entry naming for subnet routes via `routeTableStringFormat`

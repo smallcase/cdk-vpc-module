@@ -60,6 +60,7 @@ export interface ISubnetsProps {
   readonly ingressNetworkACL?: NetworkACL[];
   readonly egressNetworkACL?: NetworkACL[];
   readonly routes?: AddRouteOptions[];
+  readonly routeTableStringFormat?: boolean;
   readonly tags?: Record<string, string>;
   readonly useSubnetForNAT?: boolean;
   readonly useNestedStacks?: boolean;
@@ -267,11 +268,18 @@ export class Network extends Construct {
             },
           );
         option.routes?.forEach((route, routeIndex) => {
+          const useNewFormat = option.routeTableStringFormat ?? false;
+          const destinationKey =
+            route.routeName ?? route.destinationCidrBlock?.replace(/[./]/g, '-');
+
+          const routeTableName =
+            useNewFormat && destinationKey
+              ? `${option.subnetGroupName}-${destinationKey}-Route`
+              : `${option.subnetGroupName}${routeIndex}RouteEntry`;
           if (peeringConnectionId != undefined && route.existingVpcPeeringRouteKey != undefined) {
             let routeId: ec2.CfnVPCPeeringConnection | undefined = peeringConnectionId[route.existingVpcPeeringRouteKey];
             if (routeId != undefined) {
-              subnet.addRoute(
-                `${option.subnetGroupName}${routeIndex}RouteEntry`,
+              subnet.addRoute(routeTableName,
                 {
                   routerId: routeId.ref,
                   routerType: route.routerType,
@@ -280,14 +288,12 @@ export class Network extends Construct {
               );
             }
           } else if (route.routerId != undefined) {
-            subnet.addRoute(
-              `${option.subnetGroupName}${routeIndex}RouteEntry`,
-              {
-                routerId: route.routerId ?? '',
-                routerType: route.routerType,
-                destinationCidrBlock: route.destinationCidrBlock,
-              },
-            );
+            // Check the value of option.routeTableStringFormat to format the route name accordingly
+            subnet.addRoute(routeTableName, {
+              routerId: route.routerId ?? '',
+              routerType: route.routerType,
+              destinationCidrBlock: route.destinationCidrBlock,
+            });
           }
 
         });

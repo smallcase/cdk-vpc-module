@@ -123,6 +123,7 @@ export class Network extends Construct {
   constructor(scope: Construct, id: string, props: VPCProps) {
     super(scope, id);
     this.vpc = new ec2.Vpc(this, 'VPC', props.vpc);
+    const useNestedStacks = props.useNestedStacks ?? false;
     if (props.peeringConfigs) {
       const convertPeeringConfig: Map<string, PeeringConfig> = ObjToStrMap(props.peeringConfigs);
       convertPeeringConfig.forEach((createVpcPeering, key) => {
@@ -141,7 +142,7 @@ export class Network extends Construct {
       });
     }
     props.subnets.forEach((subnetProps) => {
-      let subnet = this.createSubnet(subnetProps, this.vpc, this.peeringConnectionIds);
+      let subnet = this.createSubnet(subnetProps, this.vpc, this.peeringConnectionIds, useNestedStacks);
       this.subnets[subnetProps.subnetGroupName] = subnet;
       subnet.forEach((sb) => {
         if (sb instanceof ec2.PublicSubnet) {

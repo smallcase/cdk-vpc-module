@@ -1092,6 +1092,7 @@ Any object.
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.natProvider">natProvider</a></code> | <code>aws-cdk-lib.aws_ec2.NatProvider</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.securityGroupOutputs">securityGroupOutputs</a></code> | <code>{[ key: string ]: aws-cdk-lib.aws_ec2.SecurityGroup}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.vpc">vpc</a></code> | <code>aws-cdk-lib.aws_ec2.Vpc</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.Network.property.hostedZoneStack">hostedZoneStack</a></code> | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneStack">HostedZoneStack</a></code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.natSubnets">natSubnets</a></code> | <code>aws-cdk-lib.aws_ec2.PublicSubnet[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.pbSubnets">pbSubnets</a></code> | <code>aws-cdk-lib.aws_ec2.PublicSubnet[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.property.pvSubnets">pvSubnets</a></code> | <code>aws-cdk-lib.aws_ec2.PrivateSubnet[]</code> | *No description.* |
@@ -1148,6 +1149,16 @@ public readonly vpc: Vpc;
 ```
 
 - *Type:* aws-cdk-lib.aws_ec2.Vpc
+
+---
+
+##### `hostedZoneStack`<sup>Optional</sup> <a name="hostedZoneStack" id="@smallcase/cdk-vpc-module.Network.property.hostedZoneStack"></a>
+
+```typescript
+public readonly hostedZoneStack: HostedZoneStack;
+```
+
+- *Type:* <a href="#@smallcase/cdk-vpc-module.HostedZoneStack">HostedZoneStack</a>
 
 ---
 
@@ -3203,6 +3214,7 @@ const vPCProps: VPCProps = { ... }
 | --- | --- | --- |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.subnets">subnets</a></code> | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps">ISubnetsProps</a>[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.vpc">vpc</a></code> | <code>aws-cdk-lib.aws_ec2.VpcProps</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.hostedZones">hostedZones</a></code> | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneConfig">HostedZoneConfig</a>[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.natEipAllocationIds">natEipAllocationIds</a></code> | <code>string[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.peeringConfigs">peeringConfigs</a></code> | <code>{[ key: string ]: <a href="#@smallcase/cdk-vpc-module.PeeringConfig">PeeringConfig</a>}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.useNestedStacks">useNestedStacks</a></code> | <code>boolean</code> | *No description.* |
@@ -3228,6 +3240,16 @@ public readonly vpc: VpcProps;
 ```
 
 - *Type:* aws-cdk-lib.aws_ec2.VpcProps
+
+---
+
+##### `hostedZones`<sup>Optional</sup> <a name="hostedZones" id="@smallcase/cdk-vpc-module.VPCProps.property.hostedZones"></a>
+
+```typescript
+public readonly hostedZones: HostedZoneConfig[];
+```
+
+- *Type:* <a href="#@smallcase/cdk-vpc-module.HostedZoneConfig">HostedZoneConfig</a>[]
 
 ---
 

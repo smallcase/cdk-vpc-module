@@ -41,4 +41,5 @@ const project = new AwsCdkConstructLibrary({
   // devDeps: [],             /* Build dependencies for this module. */
   // packageName: undefined,  /* The "name" in package.json. */
 });
+project.gitignore.addPatterns('.DS_Store');
 project.synth();

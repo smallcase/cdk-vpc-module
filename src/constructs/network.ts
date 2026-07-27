@@ -1,4 +1,10 @@
-import { aws_ec2 as ec2, CfnOutput, Tags, aws_iam as iam, Stack } from 'aws-cdk-lib';
+import {
+  aws_ec2 as ec2,
+  CfnOutput,
+  Tags,
+  aws_iam as iam,
+  Stack,
+} from 'aws-cdk-lib';
 import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import { SubnetStack } from './subnet-stack';
@@ -500,5 +506,3 @@ export class Network extends Construct {
     });
   }
 }
-
-

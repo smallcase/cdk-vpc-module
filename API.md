@@ -2279,7 +2279,9 @@ const hostedZoneConfig: HostedZoneConfig = { ... }
 | --- | --- | --- |
 | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneConfig.property.publicZone">publicZone</a></code> | <code>boolean</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneConfig.property.zoneName">zoneName</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.HostedZoneConfig.property.certificateValidationZoneName">certificateValidationZoneName</a></code> | <code>string</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneConfig.property.createAcmCertificate">createAcmCertificate</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.HostedZoneConfig.property.tags">tags</a></code> | <code>{[ key: string ]: string}</code> | *No description.* |
 
 ---
 
@@ -2303,6 +2305,16 @@ public readonly zoneName: string;
 
 ---
 
+##### `certificateValidationZoneName`<sup>Optional</sup> <a name="certificateValidationZoneName" id="@smallcase/cdk-vpc-module.HostedZoneConfig.property.certificateValidationZoneName"></a>
+
+```typescript
+public readonly certificateValidationZoneName: string;
+```
+
+- *Type:* string
+
+---
+
 ##### `createAcmCertificate`<sup>Optional</sup> <a name="createAcmCertificate" id="@smallcase/cdk-vpc-module.HostedZoneConfig.property.createAcmCertificate"></a>
 
 ```typescript
@@ -2310,6 +2322,16 @@ public readonly createAcmCertificate: boolean;
 ```
 
 - *Type:* boolean
+
+---
+
+##### `tags`<sup>Optional</sup> <a name="tags" id="@smallcase/cdk-vpc-module.HostedZoneConfig.property.tags"></a>
+
+```typescript
+public readonly tags: {[ key: string ]: string};
+```
+
+- *Type:* {[ key: string ]: string}
 
 ---
 
@@ -2333,6 +2355,7 @@ const hostedZoneStackProps: HostedZoneStackProps = { ... }
 | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneStackProps.property.removalPolicy">removalPolicy</a></code> | <code>aws-cdk-lib.RemovalPolicy</code> | Policy to apply when the nested stack is removed. |
 | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneStackProps.property.timeout">timeout</a></code> | <code>aws-cdk-lib.Duration</code> | The length of time that CloudFormation waits for the nested stack to reach the CREATE_COMPLETE state. |
 | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneStackProps.property.hostedZones">hostedZones</a></code> | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneConfig">HostedZoneConfig</a>[]</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.HostedZoneStackProps.property.hostedZoneTags">hostedZoneTags</a></code> | <code>{[ key: string ]: string}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneStackProps.property.vpc">vpc</a></code> | <code>aws-cdk-lib.aws_ec2.IVpc</code> | *No description.* |
 
 ---
@@ -2427,6 +2450,16 @@ public readonly hostedZones: HostedZoneConfig[];
 ```
 
 - *Type:* <a href="#@smallcase/cdk-vpc-module.HostedZoneConfig">HostedZoneConfig</a>[]
+
+---
+
+##### `hostedZoneTags`<sup>Optional</sup> <a name="hostedZoneTags" id="@smallcase/cdk-vpc-module.HostedZoneStackProps.property.hostedZoneTags"></a>
+
+```typescript
+public readonly hostedZoneTags: {[ key: string ]: string};
+```
+
+- *Type:* {[ key: string ]: string}
 
 ---
 
@@ -3215,6 +3248,7 @@ const vPCProps: VPCProps = { ... }
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.subnets">subnets</a></code> | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps">ISubnetsProps</a>[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.vpc">vpc</a></code> | <code>aws-cdk-lib.aws_ec2.VpcProps</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.hostedZones">hostedZones</a></code> | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneConfig">HostedZoneConfig</a>[]</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.hostedZoneTags">hostedZoneTags</a></code> | <code>{[ key: string ]: string}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.natEipAllocationIds">natEipAllocationIds</a></code> | <code>string[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.peeringConfigs">peeringConfigs</a></code> | <code>{[ key: string ]: <a href="#@smallcase/cdk-vpc-module.PeeringConfig">PeeringConfig</a>}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.VPCProps.property.useNestedStacks">useNestedStacks</a></code> | <code>boolean</code> | *No description.* |
@@ -3250,6 +3284,16 @@ public readonly hostedZones: HostedZoneConfig[];
 ```
 
 - *Type:* <a href="#@smallcase/cdk-vpc-module.HostedZoneConfig">HostedZoneConfig</a>[]
+
+---
+
+##### `hostedZoneTags`<sup>Optional</sup> <a name="hostedZoneTags" id="@smallcase/cdk-vpc-module.VPCProps.property.hostedZoneTags"></a>
+
+```typescript
+public readonly hostedZoneTags: {[ key: string ]: string};
+```
+
+- *Type:* {[ key: string ]: string}
 
 ---
 

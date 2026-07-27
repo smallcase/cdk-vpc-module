@@ -79,6 +79,7 @@ export interface VPCProps {
   readonly natEipAllocationIds?: string[];
   readonly subnets: ISubnetsProps[];
   readonly hostedZones?: HostedZoneConfig[];
+  readonly hostedZoneTags?: Record<string, string>;
   readonly vpcEndpointServices?: VpcEndpontServiceConfig[]; // List of VPC endpoint Service to configure
   readonly useNestedStacks?: boolean;
 }
@@ -210,6 +211,7 @@ export class Network extends Construct {
     if (props.hostedZones) {
       this.hostedZoneStack = new HostedZoneStack(this, 'HostedZones', {
         hostedZones: props.hostedZones,
+        hostedZoneTags: props.hostedZoneTags,
         vpc: this.vpc,
       });
     }

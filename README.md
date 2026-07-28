@@ -7,7 +7,6 @@ cdk-vpc-module construct library is an open-source extension of the AWS Cloud De
 - :white_check_mark: VPC Peering with  route table entry
 - :white_check_mark: Configurable NACL as per subnet group
 - :white_check_mark: NATGateway as per availabilityZones
-- :white_check_mark: Public/private Route 53 hosted zones with optional public ACM certificate
 
 
 Using cdk a vpc can be deployed using the following sample code snippet:
@@ -195,32 +194,6 @@ new VPCStack(app, 'TEST', {
 app.synth();
 ```
 Please refer [here](/API.md) to check how to use individual resource constructs.
-
-## Route 53 hosted zones
-
-Hosted zones are modeled separately from the `Network` construct. For private
-hosted zones, pass the VPC from the network stack and the zone is associated
-with that VPC automatically. ACM certificate creation is supported only for
-public hosted zones and creates a certificate for both `<host>` and `*.<host>`.
-
-```typescript
-import { HostedZoneStack } from '@smallcase/cdk-vpc-module/lib/constructs/hosted-zone';
-
-const hostedZones = new HostedZoneStack(this, 'HostedZones', {
-  vpc: network.vpc,
-  hostedZones: [
-    {
-      zoneName: 'example.smallcase.com',
-      publicZone: true,
-      createAcmCertificate: true,
-    },
-    {
-      zoneName: 'internal.example.smallcase.com',
-      publicZone: false,
-    },
-  ],
-});
-```
 
 ## :clapper: Quick Start
 

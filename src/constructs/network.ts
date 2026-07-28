@@ -1,6 +1,13 @@
-import { aws_ec2 as ec2, CfnOutput, Tags, aws_iam as iam, Stack } from 'aws-cdk-lib';
+import {
+  aws_ec2 as ec2,
+  CfnOutput,
+  Tags,
+  aws_iam as iam,
+  Stack,
+} from 'aws-cdk-lib';
 import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
+import { HostedZoneConfig, HostedZoneStack } from './hosted-zone';
 import { SubnetStack } from './subnet-stack';
 import { VpcEndpointServiceNestedStack, VpcEndpontServiceConfig } from './vpc-endpoint-service';
 import { ObjToStrMap } from '../utils/common';
@@ -71,6 +78,8 @@ export interface VPCProps {
   readonly vpcEndpoints?: VpcEndpointConfig[]; // List of VPC endpoints to configure
   readonly natEipAllocationIds?: string[];
   readonly subnets: ISubnetsProps[];
+  readonly hostedZones?: HostedZoneConfig[];
+  readonly hostedZoneTags?: Record<string, string>;
   readonly vpcEndpointServices?: VpcEndpontServiceConfig[]; // List of VPC endpoint Service to configure
   readonly useNestedStacks?: boolean;
 }
@@ -118,6 +127,7 @@ export class Network extends Construct {
   public readonly vpc!: ec2.Vpc;
   public readonly securityGroupOutputs: { [key: string]: ec2.SecurityGroup } = {}; // Store Security Group outputs
   public readonly endpointOutputs: { [key: string]: ec2.InterfaceVpcEndpoint | ec2.GatewayVpcEndpoint } = {}; // Store Endpoint outputs
+  public readonly hostedZoneStack?: HostedZoneStack;
   private peeringConnectionIds: PeeringConnectionInternalType = {};
   public readonly natProvider!: ec2.NatProvider;
   constructor(scope: Construct, id: string, props: VPCProps) {
@@ -198,6 +208,13 @@ export class Network extends Construct {
       });
     }
     new CfnOutput(this, 'VpcId', { value: this.vpc.vpcId });
+    if (props.hostedZones) {
+      this.hostedZoneStack = new HostedZoneStack(this, 'HostedZones', {
+        hostedZones: props.hostedZones,
+        hostedZoneTags: props.hostedZoneTags,
+        vpc: this.vpc,
+      });
+    }
     // Add VPC endpoints if specified in the props
     if (props?.vpcEndpoints) {
       for (const endpointConfig of props.vpcEndpoints) {
@@ -500,5 +517,3 @@ export class Network extends Construct {
     });
   }
 }
-
-

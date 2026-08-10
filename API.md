@@ -43,6 +43,7 @@ new HostedZoneStack(scope: Construct, id: string, props: HostedZoneStackProps)
 | **Name** | **Description** |
 | --- | --- |
 | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneStack.toString">toString</a></code> | Returns a string representation of this construct. |
+| <code><a href="#@smallcase/cdk-vpc-module.HostedZoneStack.with">with</a></code> | Applies one or more mixins to this construct. |
 | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneStack.addDependency">addDependency</a></code> | Add a dependency between this stack and another stack. |
 | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneStack.addMetadata">addMetadata</a></code> | Adds an arbitrary key-value pair, with information you want to record about the stack. |
 | <code><a href="#@smallcase/cdk-vpc-module.HostedZoneStack.addStackTag">addStackTag</a></code> | Configure a stack tag. |
@@ -70,6 +71,27 @@ public toString(): string
 ```
 
 Returns a string representation of this construct.
+
+##### `with` <a name="with" id="@smallcase/cdk-vpc-module.HostedZoneStack.with"></a>
+
+```typescript
+public with(mixins: ...IMixin[]): IConstruct
+```
+
+Applies one or more mixins to this construct.
+
+Mixins are applied in order. The list of constructs is captured at the
+start of the call, so constructs added by a mixin will not be visited.
+Use multiple `with()` calls if subsequent mixins should apply to added
+constructs.
+
+###### `mixins`<sup>Required</sup> <a name="mixins" id="@smallcase/cdk-vpc-module.HostedZoneStack.with.parameter.mixins"></a>
+
+- *Type:* ...constructs.IMixin[]
+
+The mixins to apply.
+
+---
 
 ##### `addDependency` <a name="addDependency" id="@smallcase/cdk-vpc-module.HostedZoneStack.addDependency"></a>
 
@@ -526,7 +548,7 @@ The value to assign.
 
 ---
 
-##### ~~`isConstruct`~~ <a name="isConstruct" id="@smallcase/cdk-vpc-module.HostedZoneStack.isConstruct"></a>
+##### `isConstruct` <a name="isConstruct" id="@smallcase/cdk-vpc-module.HostedZoneStack.isConstruct"></a>
 
 ```typescript
 import { HostedZoneStack } from '@smallcase/cdk-vpc-module'
@@ -535,6 +557,20 @@ HostedZoneStack.isConstruct(x: any)
 ```
 
 Checks if `x` is a construct.
+
+Use this method instead of `instanceof` to properly detect `Construct`
+instances, even when the construct library is symlinked.
+
+Explanation: in JavaScript, multiple copies of the `constructs` library on
+disk are seen as independent, completely different libraries. As a
+consequence, the class `Construct` in each copy of the `constructs` library
+is seen as a different class, and an instance of one class will not test as
+`instanceof` the other class. `npm install` will not create installations
+like this, but users may manually symlink construct libraries together or
+use a monorepo tool: in those cases, multiple copies of the `constructs`
+library can be accidentally installed, and `instanceof` will behave
+unpredictably. It is safest to avoid using `instanceof`, and using
+this type-testing method instead.
 
 ###### `x`<sup>Required</sup> <a name="x" id="@smallcase/cdk-vpc-module.HostedZoneStack.isConstruct.parameter.x"></a>
 
@@ -1015,6 +1051,7 @@ new Network(scope: Construct, id: string, props: VPCProps)
 | **Name** | **Description** |
 | --- | --- |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.toString">toString</a></code> | Returns a string representation of this construct. |
+| <code><a href="#@smallcase/cdk-vpc-module.Network.with">with</a></code> | Applies one or more mixins to this construct. |
 | <code><a href="#@smallcase/cdk-vpc-module.Network.createSubnet">createSubnet</a></code> | *No description.* |
 
 ---
@@ -1026,6 +1063,27 @@ public toString(): string
 ```
 
 Returns a string representation of this construct.
+
+##### `with` <a name="with" id="@smallcase/cdk-vpc-module.Network.with"></a>
+
+```typescript
+public with(mixins: ...IMixin[]): IConstruct
+```
+
+Applies one or more mixins to this construct.
+
+Mixins are applied in order. The list of constructs is captured at the
+start of the call, so constructs added by a mixin will not be visited.
+Use multiple `with()` calls if subsequent mixins should apply to added
+constructs.
+
+###### `mixins`<sup>Required</sup> <a name="mixins" id="@smallcase/cdk-vpc-module.Network.with.parameter.mixins"></a>
+
+- *Type:* ...constructs.IMixin[]
+
+The mixins to apply.
+
+---
 
 ##### `createSubnet` <a name="createSubnet" id="@smallcase/cdk-vpc-module.Network.createSubnet"></a>
 
@@ -1065,7 +1123,7 @@ public createSubnet(option: ISubnetsProps, vpc: Vpc, peeringConnectionId?: Peeri
 
 ---
 
-##### ~~`isConstruct`~~ <a name="isConstruct" id="@smallcase/cdk-vpc-module.Network.isConstruct"></a>
+##### `isConstruct` <a name="isConstruct" id="@smallcase/cdk-vpc-module.Network.isConstruct"></a>
 
 ```typescript
 import { Network } from '@smallcase/cdk-vpc-module'
@@ -1074,6 +1132,20 @@ Network.isConstruct(x: any)
 ```
 
 Checks if `x` is a construct.
+
+Use this method instead of `instanceof` to properly detect `Construct`
+instances, even when the construct library is symlinked.
+
+Explanation: in JavaScript, multiple copies of the `constructs` library on
+disk are seen as independent, completely different libraries. As a
+consequence, the class `Construct` in each copy of the `constructs` library
+is seen as a different class, and an instance of one class will not test as
+`instanceof` the other class. `npm install` will not create installations
+like this, but users may manually symlink construct libraries together or
+use a monorepo tool: in those cases, multiple copies of the `constructs`
+library can be accidentally installed, and `instanceof` will behave
+unpredictably. It is safest to avoid using `instanceof`, and using
+this type-testing method instead.
 
 ###### `x`<sup>Required</sup> <a name="x" id="@smallcase/cdk-vpc-module.Network.isConstruct.parameter.x"></a>
 
@@ -1244,6 +1316,7 @@ new VpcEndpointServiceNestedStack(scope: Construct, id: string, props: VpcEndpoi
 | **Name** | **Description** |
 | --- | --- |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.toString">toString</a></code> | Returns a string representation of this construct. |
+| <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.with">with</a></code> | Applies one or more mixins to this construct. |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.addDependency">addDependency</a></code> | Add a dependency between this stack and another stack. |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.addMetadata">addMetadata</a></code> | Adds an arbitrary key-value pair, with information you want to record about the stack. |
 | <code><a href="#@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.addStackTag">addStackTag</a></code> | Configure a stack tag. |
@@ -1271,6 +1344,27 @@ public toString(): string
 ```
 
 Returns a string representation of this construct.
+
+##### `with` <a name="with" id="@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.with"></a>
+
+```typescript
+public with(mixins: ...IMixin[]): IConstruct
+```
+
+Applies one or more mixins to this construct.
+
+Mixins are applied in order. The list of constructs is captured at the
+start of the call, so constructs added by a mixin will not be visited.
+Use multiple `with()` calls if subsequent mixins should apply to added
+constructs.
+
+###### `mixins`<sup>Required</sup> <a name="mixins" id="@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.with.parameter.mixins"></a>
+
+- *Type:* ...constructs.IMixin[]
+
+The mixins to apply.
+
+---
 
 ##### `addDependency` <a name="addDependency" id="@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.addDependency"></a>
 
@@ -1727,7 +1821,7 @@ The value to assign.
 
 ---
 
-##### ~~`isConstruct`~~ <a name="isConstruct" id="@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.isConstruct"></a>
+##### `isConstruct` <a name="isConstruct" id="@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.isConstruct"></a>
 
 ```typescript
 import { VpcEndpointServiceNestedStack } from '@smallcase/cdk-vpc-module'
@@ -1736,6 +1830,20 @@ VpcEndpointServiceNestedStack.isConstruct(x: any)
 ```
 
 Checks if `x` is a construct.
+
+Use this method instead of `instanceof` to properly detect `Construct`
+instances, even when the construct library is symlinked.
+
+Explanation: in JavaScript, multiple copies of the `constructs` library on
+disk are seen as independent, completely different libraries. As a
+consequence, the class `Construct` in each copy of the `constructs` library
+is seen as a different class, and an instance of one class will not test as
+`instanceof` the other class. `npm install` will not create installations
+like this, but users may manually symlink construct libraries together or
+use a monorepo tool: in those cases, multiple copies of the `constructs`
+library can be accidentally installed, and `instanceof` will behave
+unpredictably. It is safest to avoid using `instanceof`, and using
+this type-testing method instead.
 
 ###### `x`<sup>Required</sup> <a name="x" id="@smallcase/cdk-vpc-module.VpcEndpointServiceNestedStack.isConstruct.parameter.x"></a>
 
@@ -2624,6 +2732,7 @@ const networkLoadBalancerConfig: NetworkLoadBalancerConfig = { ... }
 | <code><a href="#@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.subnetGroupName">subnetGroupName</a></code> | <code>string</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.certificates">certificates</a></code> | <code>string[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.existingSecurityGroupId">existingSecurityGroupId</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.healthCheck">healthCheck</a></code> | <code><a href="#@smallcase/cdk-vpc-module.NlbHealthCheckConfig">NlbHealthCheckConfig</a></code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.internetFacing">internetFacing</a></code> | <code>boolean</code> | *No description.* |
 
 ---
@@ -2668,6 +2777,16 @@ public readonly existingSecurityGroupId: string;
 
 ---
 
+##### `healthCheck`<sup>Optional</sup> <a name="healthCheck" id="@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.healthCheck"></a>
+
+```typescript
+public readonly healthCheck: NlbHealthCheckConfig;
+```
+
+- *Type:* <a href="#@smallcase/cdk-vpc-module.NlbHealthCheckConfig">NlbHealthCheckConfig</a>
+
+---
+
 ##### `internetFacing`<sup>Optional</sup> <a name="internetFacing" id="@smallcase/cdk-vpc-module.NetworkLoadBalancerConfig.property.internetFacing"></a>
 
 ```typescript
@@ -2675,6 +2794,56 @@ public readonly internetFacing: boolean;
 ```
 
 - *Type:* boolean
+
+---
+
+### NlbHealthCheckConfig <a name="NlbHealthCheckConfig" id="@smallcase/cdk-vpc-module.NlbHealthCheckConfig"></a>
+
+#### Initializer <a name="Initializer" id="@smallcase/cdk-vpc-module.NlbHealthCheckConfig.Initializer"></a>
+
+```typescript
+import { NlbHealthCheckConfig } from '@smallcase/cdk-vpc-module'
+
+const nlbHealthCheckConfig: NlbHealthCheckConfig = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@smallcase/cdk-vpc-module.NlbHealthCheckConfig.property.path">path</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.NlbHealthCheckConfig.property.port">port</a></code> | <code>number</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.NlbHealthCheckConfig.property.protocol">protocol</a></code> | <code>aws-cdk-lib.aws_elasticloadbalancingv2.Protocol</code> | *No description.* |
+
+---
+
+##### `path`<sup>Optional</sup> <a name="path" id="@smallcase/cdk-vpc-module.NlbHealthCheckConfig.property.path"></a>
+
+```typescript
+public readonly path: string;
+```
+
+- *Type:* string
+
+---
+
+##### `port`<sup>Optional</sup> <a name="port" id="@smallcase/cdk-vpc-module.NlbHealthCheckConfig.property.port"></a>
+
+```typescript
+public readonly port: number;
+```
+
+- *Type:* number
+
+---
+
+##### `protocol`<sup>Optional</sup> <a name="protocol" id="@smallcase/cdk-vpc-module.NlbHealthCheckConfig.property.protocol"></a>
+
+```typescript
+public readonly protocol: Protocol;
+```
+
+- *Type:* aws-cdk-lib.aws_elasticloadbalancingv2.Protocol
 
 ---
 

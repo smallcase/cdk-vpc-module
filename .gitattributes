@@ -2,7 +2,7 @@
 
 * text=auto eol=lf
 *.snap linguist-generated
-/.eslintrc.json linguist-generated
+/.eslintrc.json linguist-generated linguist-language=JSON-with-Comments
 /.gitattributes linguist-generated
 /.github/pull_request_template.md linguist-generated
 /.github/workflows/build.yml linguist-generated
@@ -10,6 +10,7 @@
 /.github/workflows/release.yml linguist-generated
 /.github/workflows/upgrade-main.yml linguist-generated
 /.gitignore linguist-generated
+/.mergify.yml linguist-generated
 /.npmignore linguist-generated
 /.projen/** linguist-generated
 /.projen/deps.json linguist-generated
@@ -18,5 +19,6 @@
 /API.md linguist-generated
 /LICENSE linguist-generated
 /package.json linguist-generated
-/tsconfig.dev.json linguist-generated
+/test/tsconfig.json linguist-generated linguist-language=JSON-with-Comments
+/tsconfig.json linguist-generated
 /yarn.lock linguist-generated

@@ -8,6 +8,7 @@ cdk-vpc-module construct library is an open-source extension of the AWS Cloud De
 - :white_check_mark: Configurable NACL as per subnet group
 - :white_check_mark: NATGateway as per availabilityZones
 - :white_check_mark: Public/private Route 53 hosted zones with optional public ACM certificate
+- :white_check_mark: VPC Endpoint Services backed by NLB → ALB with configurable NLB health check protocol and path
 
 
 Using cdk a vpc can be deployed using the following sample code snippet:
@@ -221,6 +222,70 @@ const hostedZones = new HostedZoneStack(this, 'HostedZones', {
   ],
 });
 ```
+
+## VPC Endpoint Services (NLB → ALB)
+
+`VpcEndpointServiceNestedStack` creates a VPC Endpoint Service backed by an NLB that forwards traffic to an ALB.
+
+```typescript
+import { VpcEndpointServiceNestedStack } from '@smallcase/cdk-vpc-module/lib/constructs/vpc-endpoint-service';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+
+new VpcEndpointServiceNestedStack(this, 'VpcEndpointServices', {
+  vpc: network.vpc,
+  subnets: network.subnets,
+  vpcEndpointServiceConfigs: [
+    {
+      name: 'my-service',
+      allowedPrincipals: ['arn:aws:iam::123456789012:root'],
+      acceptanceRequired: false,
+      alb: {
+        existingArn: 'arn:aws:elasticloadbalancing:...',
+        existingSecurityGroupId: 'sg-xxxxxxxx',
+      },
+      nlb: {
+        subnetGroupName: 'Private',
+        securityGroupRules: [
+          {
+            peer: ec2.Peer.ipv4('10.0.0.0/8'),
+            port: ec2.Port.tcp(443),
+            description: 'Allow HTTPS from internal',
+          },
+        ],
+        certificates: ['arn:aws:acm:...'],
+        // Override health check when the ALB is HTTPS-only.
+        // Defaults to HTTP on / if omitted.
+        healthCheck: {
+          protocol: elbv2.Protocol.HTTPS,
+          path: '/nlb-healthcheck',
+          port: 443,
+        },
+      },
+    },
+  ],
+});
+```
+
+### `NetworkLoadBalancerConfig`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `subnetGroupName` | `string` | yes | Subnet group for the NLB |
+| `securityGroupRules` | `SecurityGroupRule[]` | yes | Ingress rules for the NLB security group |
+| `existingSecurityGroupId` | `string` | no | Reuse an existing SG instead of creating one |
+| `certificates` | `string[]` | no | ACM certificate ARNs — enables TLS listeners on the NLB |
+| `internetFacing` | `boolean` | no | Defaults to `false` |
+| `healthCheck` | `NlbHealthCheckConfig` | no | Override the NLB → ALB target group health check |
+
+### `NlbHealthCheckConfig`
+
+| Field | Type | Description |
+|---|---|---|
+| `protocol` | `elbv2.Protocol` | Health check protocol (e.g. `HTTPS`). Defaults to `HTTP` if omitted |
+| `path` | `string` | Health check path (e.g. `/nlb-healthcheck`) |
+| `port` | `number` | Health check port. Defaults to the target port if omitted |
+
+> **When to set `healthCheck`:** The NLB target group defaults to HTTP on `/`. If the backing ALB is HTTPS-only, set `protocol: elbv2.Protocol.HTTPS` and point `path` to an endpoint that returns HTTP 200.
 
 ## :clapper: Quick Start
 

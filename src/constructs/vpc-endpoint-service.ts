@@ -24,12 +24,19 @@ export interface LoadBalancerConfig {
   readonly securityGroupRules?: SecurityGroupRule[];
 }
 
+export interface NlbHealthCheckConfig {
+  readonly protocol?: elbv2.Protocol;
+  readonly path?: string;
+  readonly port?: number;
+}
+
 export interface NetworkLoadBalancerConfig {
   readonly subnetGroupName: string;
   readonly securityGroupRules: SecurityGroupRule[];
   readonly existingSecurityGroupId?: string;
   readonly certificates?: string[];
   readonly internetFacing?: boolean;
+  readonly healthCheck?: NlbHealthCheckConfig;
 }
 
 export interface TargetGroupConfig {
@@ -95,6 +102,11 @@ export class VpcEndpointServiceNestedStack extends NestedStack {
         vpc: vpc,
         protocol: elbv2.Protocol.TCP,
         targets: [new targets.AlbArnTarget(ALB.loadBalancerArn, 443)],
+        healthCheck: nlb.healthCheck ? {
+          protocol: nlb.healthCheck.protocol,
+          path: nlb.healthCheck.path,
+          port: nlb.healthCheck.port !== undefined ? `${nlb.healthCheck.port}` : undefined,
+        } : undefined,
       });
       nlbTargetGroups.push(nlbTargetGroup);
       albListener = ALB.addListener(`${name}-443-ALBListener`, {
@@ -122,6 +134,11 @@ export class VpcEndpointServiceNestedStack extends NestedStack {
         vpc: vpc,
         protocol: elbv2.Protocol.TCP,
         targets: [new targets.AlbArnTarget(alb.existingArn, 443)],
+        healthCheck: nlb.healthCheck ? {
+          protocol: nlb.healthCheck.protocol,
+          path: nlb.healthCheck.path,
+          port: nlb.healthCheck.port !== undefined ? `${nlb.healthCheck.port}` : undefined,
+        } : undefined,
       });
       nlbTargetGroups.push(nlbTargetGroup);
       albListeners = this.getLoadBalancerListener(alb.existingArn, true, name);

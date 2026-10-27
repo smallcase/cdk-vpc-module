@@ -26,11 +26,6 @@ const project = new AwsCdkConstructLibrary({
     distName: 'cdk-vpc-module',
     module: 'cdk_vpc_module',
   },
-  publishToGo: {
-    gitUserName: 'sc-infra-bot',
-    gitUserEmail: 'infra@smallcase.com',
-    moduleName: 'github.com/smallcase/cdk-vpc-module-go',
-  },
   releaseEveryCommit: true,
   licensed: true, /* Indicates if a license should be added. */
   dependabot: false, /* Include dependabot configuration. */

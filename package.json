@@ -17,7 +17,6 @@
     "eslint": "projen eslint",
     "package": "projen package",
     "package-all": "projen package-all",
-    "package:go": "projen package:go",
     "package:js": "projen package:js",
     "package:python": "projen package:python",
     "post-compile": "projen post-compile",
@@ -121,9 +120,6 @@
       "python": {
         "distName": "cdk-vpc-module",
         "module": "cdk_vpc_module"
-      },
-      "go": {
-        "moduleName": "github.com/smallcase/cdk-vpc-module-go"
       }
     },
     "tsconfig": "tsconfig.json",

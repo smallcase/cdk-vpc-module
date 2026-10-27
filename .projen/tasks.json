@@ -210,23 +210,6 @@
         },
         {
           "spawn": "package:python"
-        },
-        {
-          "spawn": "package:go"
-        }
-      ]
-    },
-    "package:go": {
-      "name": "package:go",
-      "description": "Create go language bindings",
-      "steps": [
-        {
-          "execArgs": [
-            "jsii-pacmak",
-            "-v",
-            "--target",
-            "go"
-          ]
         }
       ]
     },

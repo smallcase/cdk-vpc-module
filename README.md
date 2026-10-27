@@ -197,6 +197,29 @@ app.synth();
 ```
 Please refer [here](/API.md) to check how to use individual resource constructs.
 
+## Pinning egress to a single NAT gateway
+
+By default every private subnet gets an automatic `0.0.0.0/0` route to the NAT gateway in its own AZ. Set `skipDefaultNatRoute: true` on a subnet group to opt out, and declare your own default route so all AZs of the group egress through one NAT gateway:
+
+```typescript
+{
+  subnetGroupName: 'PocSingleNat',
+  subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+  cidrBlock: ['10.0.112.0/20', '10.0.128.0/20', '10.0.144.0/20'],
+  availabilityZones: ['ap-south-1a', 'ap-south-1b', 'ap-south-1c'],
+  skipDefaultNatRoute: true,
+  routes: [
+    {
+      routerType: ec2.RouterType.NAT_GATEWAY,
+      destinationCidrBlock: '0.0.0.0/0',
+      routerId: 'nat-0123456789abcdef0', // the single NAT gateway
+    },
+  ],
+}
+```
+
+Traffic from the other AZs crosses AZ boundaries to reach that NAT gateway (cross-AZ data charges apply), and that NAT's AZ becomes a single point of failure for the group.
+
 ## Route 53 hosted zones
 
 Hosted zones are modeled separately from the `Network` construct. For private

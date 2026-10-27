@@ -3581,6 +3581,7 @@ public readonly routeTableId: string;
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.ingressNetworkACL">ingressNetworkACL</a></code> | <code><a href="#@smallcase/cdk-vpc-module.NetworkACL">NetworkACL</a>[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.routes">routes</a></code> | <code><a href="#@smallcase/cdk-vpc-module.AddRouteOptions">AddRouteOptions</a>[]</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.routeTableStringFormat">routeTableStringFormat</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.skipDefaultNatRoute">skipDefaultNatRoute</a></code> | <code>boolean</code> | Do not add the automatic default route (0.0.0.0/0) to the same-AZ NAT gateway for the private subnets of this group. Declare your own 0.0.0.0/0 route in `routes` (e.g. RouterType.NAT_GATEWAY with a routerId) to pin egress to a specific NAT gateway. |
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.tags">tags</a></code> | <code>{[ key: string ]: string}</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.useNestedStacks">useNestedStacks</a></code> | <code>boolean</code> | *No description.* |
 | <code><a href="#@smallcase/cdk-vpc-module.ISubnetsProps.property.useSubnetForNAT">useSubnetForNAT</a></code> | <code>boolean</code> | *No description.* |
@@ -3664,6 +3665,19 @@ public readonly routeTableStringFormat: boolean;
 ```
 
 - *Type:* boolean
+
+---
+
+##### `skipDefaultNatRoute`<sup>Optional</sup> <a name="skipDefaultNatRoute" id="@smallcase/cdk-vpc-module.ISubnetsProps.property.skipDefaultNatRoute"></a>
+
+```typescript
+public readonly skipDefaultNatRoute: boolean;
+```
+
+- *Type:* boolean
+- *Default:* false
+
+Do not add the automatic default route (0.0.0.0/0) to the same-AZ NAT gateway for the private subnets of this group. Declare your own 0.0.0.0/0 route in `routes` (e.g. RouterType.NAT_GATEWAY with a routerId) to pin egress to a specific NAT gateway.
 
 ---
 

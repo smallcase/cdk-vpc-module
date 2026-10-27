@@ -70,6 +70,15 @@ export interface ISubnetsProps {
   readonly routeTableStringFormat?: boolean;
   readonly tags?: Record<string, string>;
   readonly useSubnetForNAT?: boolean;
+  /**
+   * Do not add the automatic default route (0.0.0.0/0) to the same-AZ NAT gateway
+   * for the private subnets of this group. Declare your own 0.0.0.0/0 route in
+   * `routes` (e.g. RouterType.NAT_GATEWAY with a routerId) to pin egress to a
+   * specific NAT gateway.
+   *
+   * @default false
+   */
+  readonly skipDefaultNatRoute?: boolean;
   readonly useNestedStacks?: boolean;
 }
 export interface VPCProps {
@@ -157,7 +166,7 @@ export class Network extends Construct {
       subnet.forEach((sb) => {
         if (sb instanceof ec2.PublicSubnet) {
           this.pbSubnets.push(sb);
-        } else if (sb instanceof ec2.PrivateSubnet) {
+        } else if (sb instanceof ec2.PrivateSubnet && !subnetProps.skipDefaultNatRoute) {
           this.pvSubnets.push(sb);
         }
         if (
